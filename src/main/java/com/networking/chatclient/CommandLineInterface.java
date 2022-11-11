@@ -286,6 +286,7 @@ public class CommandLineInterface extends UserInterface {
     public void run() {
 
         client.receiveMessageLabelEvent.onEvent((payload) -> {
+            System.out.print("Message Label Event");
             synchronized (this) {
                 Message m = payload.labelMessage;
                 System.out.print("\b\b\n");
@@ -332,7 +333,8 @@ public class CommandLineInterface extends UserInterface {
                 args.add(m.group(1).replace("\"", ""));
             }
 
-            runCommand(args);
+            if (!args.isEmpty())
+                runCommand(args);
         }
     }
 

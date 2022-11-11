@@ -28,5 +28,8 @@ public class ClientEvent<T> {
     public synchronized void invoke(T eventParameter) {
         this.eventParameter = eventParameter;
         this.notifyAll();
+        for (Consumer<T> eventFunction : eventFunctions.values()) {
+            eventFunction.accept(eventParameter);
+        }
     }
 }
