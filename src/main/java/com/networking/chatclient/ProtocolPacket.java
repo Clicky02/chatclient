@@ -1,6 +1,7 @@
 package com.networking.chatclient;
 
-import java.net.Socket;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class ProtocolPacket {
@@ -37,7 +38,12 @@ public class ProtocolPacket {
         return packetBuilder.toString();
     }
 
-    public void send(Socket socket) {
-        System.out.println(getContent());
+    public void send(DataOutputStream outputStream) {
+        try {
+            outputStream.writeBytes(getContent());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

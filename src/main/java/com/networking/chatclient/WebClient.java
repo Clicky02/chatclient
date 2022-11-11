@@ -1,5 +1,6 @@
 package com.networking.chatclient;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -131,6 +132,7 @@ public class WebClient {
      */
 
     Socket socket;
+    DataOutputStream outputStream;
 
     Thread responseHandlerThread; // The thread that will listen to the server
     Thread interfaceThread; // The thread that will run the interface and send messages to the server
@@ -164,6 +166,7 @@ public class WebClient {
      */
     public void connect(String host, int port) throws UnknownHostException, IOException {
         socket = new Socket(host, port);
+        outputStream = new DataOutputStream(socket.getOutputStream());
 
         responseHandlerThread = new Thread(new Runnable() {
             @Override
@@ -324,7 +327,7 @@ public class WebClient {
     public synchronized boolean join(String username) {
         if (!joined) {
             this.username = username;
-            ClientProtocol.createJoinPacket(username).send(socket);
+            ClientProtocol.createJoinPacket(username).send(outputStream);
 
             UsernameVerifyEventPayload payload = usernameVerifyEvent.waitForEvent();
 
@@ -340,7 +343,7 @@ public class WebClient {
 
     public void postMessage(int groupId, String subject, String content) {
         if (joined) {
-            ClientProtocol.createMessagePacket(MessageAction.POST, groupId, -1, subject, content).send(socket);
+            ClientProtocol.createMessagePacket(MessageAction.POST, groupId, -1, subject, content).send(outputStream);
         }
     }
 
@@ -362,20 +365,20 @@ public class WebClient {
 
     public void requestMessage(int groupId, int messageId) {
         ClientProtocol.createMessagePacket(MessageAction.RETRIEVE, groupId, messageId, "", "")
-                .send(socket);
+                .send(outputStream);
     }
 
     public void joinGroup(int groupId) {
         if (joined) {
             userGroups.add(groupId);
-            ClientProtocol.createGroupPacket(GroupAction.JOIN, groupId).send(socket);
+            ClientProtocol.createGroupPacket(GroupAction.JOIN, groupId).send(outputStream);
         }
     }
 
     public void leaveGroup(int groupId) {
         if (joined) {
             userGroups.remove(groupId);
-            ClientProtocol.createGroupPacket(GroupAction.LEAVE, groupId).send(socket);
+            ClientProtocol.createGroupPacket(GroupAction.LEAVE, groupId).send(outputStream);
         }
     }
 
@@ -396,7 +399,7 @@ public class WebClient {
     }
 
     public void requestGroupUsers(int groupId) {
-        ClientProtocol.createGroupPacket(GroupAction.USERS, groupId).send(socket);
+        ClientProtocol.createGroupPacket(GroupAction.USERS, groupId).send(outputStream);
     }
 
     public synchronized ArrayList<Group> retrieveGroups() {
@@ -411,13 +414,13 @@ public class WebClient {
 
     public void requestGroups() {
         if (joined) {
-            ClientProtocol.createGroupPacket(GroupAction.LIST, -1).send(socket);
+            ClientProtocol.createGroupPacket(GroupAction.LIST, -1).send(outputStream);
         }
     }
 
     public void disconnect() throws IOException {
         if (joined) {
-            ClientProtocol.createDisconnectPacket().send(socket);
+            ClientProtocol.createDisconnectPacket().send(outputStream);
             joined = false;
         }
 
