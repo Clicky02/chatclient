@@ -3,6 +3,7 @@ package com.networking.chatclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.NumberFormat.Style;
 import java.util.ArrayList;
 import java.util.function.Function;
 
@@ -100,8 +101,12 @@ public class CommandLineInterface extends UserInterface {
                 }
 
                 String username = args[1];
-                client.join(username);
-                System.out.println("Joined server.");
+                if (client.join(username)) {
+                    System.out.println("Joined server.");
+                } else {
+                    System.out.println("Invalid username.");
+                }
+
                 return true;
             }, false),
 

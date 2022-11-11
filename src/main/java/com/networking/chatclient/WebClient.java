@@ -182,7 +182,6 @@ public class WebClient {
 
                         if (message.equalsIgnoreCase(""))
                             continue;
-                        System.out.println("Message: " + message);
 
                         ProtocolPacket packet = ServerProtocol.parseResponse(message);
                         handleResponse(packet);
@@ -324,8 +323,7 @@ public class WebClient {
                 }
             case VERIFY_USERNAME:
                 synchronized (usernameVerifyEvent) {
-                    System.out.println("Verify User");
-                    boolean success = Boolean.getBoolean(packet.parameters.get(0));
+                    boolean success = (packet.parameters.get(0).equals("1"));
 
                     if (success) {
                         joined = true;
@@ -413,7 +411,7 @@ public class WebClient {
 
                 Group retrievedGroup = null;
 
-                while (retrievedGroup.id != groupId) {
+                while (retrievedGroup == null || retrievedGroup.id != groupId) {
                     retrievedGroup = receiveUserListEvent.waitForEvent().group;
                 }
 
