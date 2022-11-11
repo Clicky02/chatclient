@@ -3,14 +3,20 @@ package com.networking.chatclient;
 public final class ServerProtocol {
 
     public enum ServerCommand {
-        VERIFY_USERNAME,
-        USER_JOIN_NOTIF,
-        USER_LEAVE_NOTIF,
-        SEND_MESSAGE_LABEL,
-        SEND_USER_LIST,
-        SEND_GROUPS_LIST,
-        SEND_MESSAGE_CONTENT,
-        BAD_MESSAGE,
+        VERIFY_USERNAME(1),
+        USER_JOIN_NOTIF(2),
+        USER_LEAVE_NOTIF(2),
+        SEND_MESSAGE_LABEL(5),
+        SEND_USER_LIST(2),
+        SEND_GROUPS_LIST(2),
+        SEND_MESSAGE_CONTENT(3),
+        BAD_MESSAGE(0);
+
+        int parameters;
+
+        ServerCommand(int parameters) {
+            this.parameters = parameters;
+        }
     }
 
     public static ProtocolPacket parseResponse(String str) {

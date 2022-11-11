@@ -204,8 +204,11 @@ public class WebClient {
     public void handleResponse(ProtocolPacket packet) {
         ServerCommand command = ServerProtocol.getServerCommand(packet);
 
-        if (command == null)
+        if (command == null || packet.parameters.size() < command.parameters) {
+            System.out.println("Invalid Server Packet Received.");
+            System.out.println("Command: " + packet.command);
             return;
+        }
 
         switch (command) {
             case BAD_MESSAGE:
@@ -373,8 +376,7 @@ public class WebClient {
                 requestMessage(groupId, messageId);
 
                 Message retrievedMessage = null;
-
-                while (retrievedMessage.messageId != messageId) {
+                while (retrievedMessage == null || retrievedMessage.messageId != messageId) {
                     retrievedMessage = receiveMessageContentEvent.waitForEvent().message;
                 }
 
@@ -445,9 +447,22 @@ public class WebClient {
     }
 
     public void disconnect() throws IOException {
+        final int TIMEOUT = 5000;
+
         if (joined) {
             ClientProtocol.createDisconnectPacket().send(outputStream);
             joined = false;
+        }
+
+        // Wait for the server to close the socket
+        try {
+            int timeElapsed = 0;
+            while (!socket.isClosed() && timeElapsed < TIMEOUT) {
+                Thread.sleep(100);
+                timeElapsed += 100;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         if (socket != null && !socket.isClosed())

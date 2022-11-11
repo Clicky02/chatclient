@@ -156,8 +156,9 @@ public class CommandLineInterface extends UserInterface {
 
             new Command("exit", 1, (args) -> {
                 try {
+                    System.out.println("Disconnecting...");
                     client.disconnect();
-                    System.out.println("Disconnected.");
+
                     System.exit(0);
                     return true;
                 } catch (IOException e) {
