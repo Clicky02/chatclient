@@ -3,9 +3,10 @@ package com.networking.chatclient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.NumberFormat.Style;
 import java.util.ArrayList;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.networking.chatclient.WebClient.Group;
 import com.networking.chatclient.WebClient.Message;
@@ -21,25 +22,25 @@ public class CommandLineInterface extends UserInterface {
 
     public class Command {
         String name;
-        int argumentCount;
-        Function<String[], Boolean> commandFunction;
+        int minimumArgumentCount;
+        Function<ArrayList<String>, Boolean> commandFunction;
         boolean mustBeJoined = true;
 
-        public Command(String name, int argumentCount, Function<String[], Boolean> commandFunction) {
+        public Command(String name, int minimumArgumentCount, Function<ArrayList<String>, Boolean> commandFunction) {
             this.name = name;
-            this.argumentCount = argumentCount;
+            this.minimumArgumentCount = minimumArgumentCount;
             this.commandFunction = commandFunction;
         }
 
-        public Command(String name, int argumentCount, Function<String[], Boolean> commandFunction,
+        public Command(String name, int minimumArgumentCount, Function<ArrayList<String>, Boolean> commandFunction,
                 boolean mustBeJoined) {
             this.name = name;
-            this.argumentCount = argumentCount;
+            this.minimumArgumentCount = minimumArgumentCount;
             this.commandFunction = commandFunction;
             this.mustBeJoined = mustBeJoined;
         }
 
-        public boolean run(WebClient client, String[] args) {
+        public boolean run(WebClient client, ArrayList<String> args) {
             if (mustBeJoined && !client.joined) {
                 System.out.println("You must have connected to and joined a sever to perform this command.");
                 System.out.println("Run the command \"connect <host> <port>\" to connect to a server.");
@@ -47,8 +48,8 @@ public class CommandLineInterface extends UserInterface {
                 return false;
             }
 
-            if (args.length != argumentCount) {
-                System.out.println(name + " requires " + argumentCount + " arguments.");
+            if (args.size() < minimumArgumentCount) {
+                System.out.println(name + " requires at least" + minimumArgumentCount + " arguments.");
                 return false;
             }
 
@@ -80,8 +81,8 @@ public class CommandLineInterface extends UserInterface {
                 }
 
                 try {
-                    String host = args[1];
-                    int port = Integer.parseInt(args[2]);
+                    String host = args.get(1);
+                    int port = Integer.parseInt(args.get(2));
                     client.connect(host, port);
                     return true;
                 } catch (NumberFormatException e) {
@@ -100,7 +101,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                String username = args[1];
+                String username = args.get(1);
                 if (client.join(username)) {
                     System.out.println("Joined server.");
                 } else {
@@ -111,8 +112,8 @@ public class CommandLineInterface extends UserInterface {
             }, false),
 
             new Command("post", 3, (args) -> {
-                String subject = args[1];
-                String content = args[2];
+                String subject = args.get(1);
+                String content = args.get(2);
                 client.postMessage(0, subject, content);
                 System.out.println("Message Posted.");
                 return true;
@@ -143,7 +144,7 @@ public class CommandLineInterface extends UserInterface {
             }),
 
             new Command("message", 2, (args) -> {
-                int messageId = getMessageIdFromArgument(0, args[1]);
+                int messageId = getMessageIdFromArgument(0, args.get(1));
                 if (messageId == -1) {
                     System.out.println("Invalid message Id.");
                     return false;
@@ -186,7 +187,7 @@ public class CommandLineInterface extends UserInterface {
             new Command("groupjoin", 2, (args) -> {
                 // client.retrieveGroups();
 
-                int groupId = getGroupIdFromArgument(args[1]);
+                int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.");
                     return false;
@@ -201,14 +202,14 @@ public class CommandLineInterface extends UserInterface {
             new Command("grouppost", 4, (args) -> {
                 // client.retrieveGroups();
 
-                int groupId = getGroupIdFromArgument(args[1]);
+                int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.\n");
                     return false;
                 }
 
-                String subject = args[1];
-                String content = args[2];
+                String subject = args.get(1);
+                String content = args.get(2);
                 client.postMessage(groupId, subject, content);
                 System.out.println("Message Posted.\n");
                 return true;
@@ -217,7 +218,7 @@ public class CommandLineInterface extends UserInterface {
             new Command("groupusers", 2, (args) -> {
                 // client.retrieveGroups();
 
-                int groupId = getGroupIdFromArgument(args[1]);
+                int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.\n");
                     return false;
@@ -240,7 +241,7 @@ public class CommandLineInterface extends UserInterface {
             new Command("groupleave", 2, (args) -> {
                 // client.retrieveGroups();
 
-                int groupId = getGroupIdFromArgument(args[1]);
+                int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.\n");
                     return false;
@@ -254,13 +255,13 @@ public class CommandLineInterface extends UserInterface {
             new Command("groupmessage", 2, (args) -> {
                 // client.retrieveGroups();
 
-                int groupId = getGroupIdFromArgument(args[1]);
+                int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.\n");
                     return false;
                 }
 
-                int messageId = getMessageIdFromArgument(groupId, args[1]);
+                int messageId = getMessageIdFromArgument(groupId, args.get(1));
                 if (messageId == -1) {
                     System.out.println("Invalid message Id.\n");
                     return false;
@@ -323,13 +324,20 @@ public class CommandLineInterface extends UserInterface {
         System.out.println("Enter a command or enter help to get a list of commands.");
 
         while (true) {
-            String[] args = getString("> ").split(" ");
+            String input = getString("> ");
+
+            ArrayList<String> args = new ArrayList<String>();
+            Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(input);
+            while (m.find()) {
+                args.add(m.group(1).replace("\"", ""));
+            }
+
             runCommand(args);
         }
     }
 
-    private synchronized void runCommand(String[] args) {
-        String commandName = args[0];
+    private synchronized void runCommand(ArrayList<String> args) {
+        String commandName = args.get(0);
         for (Command command : commands) {
             if (command.name.equalsIgnoreCase(commandName)) {
                 command.run(client, args);
