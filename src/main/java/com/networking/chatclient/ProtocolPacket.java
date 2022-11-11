@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class ProtocolPacket {
-    final static String CRLF = "\r\n";
+    final static String CRLF = "/r/n";
     final static String END = "\0";
     protected String command = "";
     protected ArrayList<String> parameters = new ArrayList<String>();
