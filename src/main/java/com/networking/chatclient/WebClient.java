@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import com.networking.chatclient.ClientProtocol.GroupAction;
 import com.networking.chatclient.ClientProtocol.MessageAction;
+import com.networking.chatclient.ServerProtocol.ServerCommand;
 
 /*
  * Hello world!
@@ -156,7 +157,7 @@ public class WebClient {
      * Starts the client.
      */
     public void start() {
-        Interface interf = new CommandLineInterface(this);
+        UserInterface interf = new CommandLineInterface(this);
         interfaceThread = new Thread(interf);
         interfaceThread.start();
     }
@@ -177,7 +178,10 @@ public class WebClient {
                     scanner.useDelimiter("\0");
 
                     while (scanner.hasNext()) {
-                        ProtocolPacket packet = ServerProtocol.parseResponse(scanner.next());
+                        String message = scanner.next();
+                        System.out.println(message);
+                        ProtocolPacket packet = ServerProtocol.parseResponse(message);
+                        System.out.println(packet.command);
                         handleResponse(packet);
                     }
 
@@ -195,128 +199,138 @@ public class WebClient {
     /*
      * Handles a response packet.
      */
-    public synchronized void handleResponse(ProtocolPacket packet) {
-        switch (ServerProtocol.getServerCommand(packet)) {
+    public void handleResponse(ProtocolPacket packet) {
+        ServerCommand command = ServerProtocol.getServerCommand(packet);
+        System.out.println(command);
+        switch (command) {
             case BAD_MESSAGE:
                 System.out.println("Something went wrong");
                 return;
-            case SEND_GROUPS_LIST: {
-                String[] names = packet.parameters.get(0).split(",");
-                String[] ids = packet.parameters.get(1).split(",");
+            case SEND_GROUPS_LIST:
+                synchronized (receiveGroupListEvent) {
+                    String[] names = packet.parameters.get(0).split(",");
+                    String[] ids = packet.parameters.get(1).split(",");
 
-                for (int i = 0; i < ids.length; i++) {
-                    int id = Integer.parseInt(ids[i]);
-                    if (!groups.containsKey(id)) {
-                        groups.put(id, new Group(Integer.parseInt(ids[i]), names[i]));
+                    for (int i = 0; i < ids.length; i++) {
+                        int id = Integer.parseInt(ids[i]);
+                        if (!groups.containsKey(id)) {
+                            groups.put(id, new Group(Integer.parseInt(ids[i]), names[i]));
+                        }
                     }
+
+                    receiveGroupListEvent.invoke(new ReceiveGroupListEventPayload());
+                    return;
                 }
+            case SEND_MESSAGE_CONTENT:
+                synchronized (receiveMessageContentEvent) {
+                    int groupId = Integer.parseInt(packet.parameters.get(0));
+                    int messageId = Integer.parseInt(packet.parameters.get(1));
+                    String content = packet.parameters.get(2);
 
-                receiveGroupListEvent.invoke(new ReceiveGroupListEventPayload());
-                return;
-            }
-            case SEND_MESSAGE_CONTENT: {
-                int groupId = Integer.parseInt(packet.parameters.get(0));
-                int messageId = Integer.parseInt(packet.parameters.get(1));
-                String content = packet.parameters.get(2);
+                    Message m = getSavedMessage(groupId, messageId);
+                    m.setContent(content);
 
-                Message m = getSavedMessage(groupId, messageId);
-                m.setContent(content);
+                    ReceiveMessageContentEventPayload payload = new ReceiveMessageContentEventPayload();
+                    payload.message = m;
 
-                ReceiveMessageContentEventPayload payload = new ReceiveMessageContentEventPayload();
-                payload.message = m;
-
-                receiveMessageContentEvent.invoke(payload);
-                break;
-            }
-            case SEND_MESSAGE_LABEL: {
-                int groupId = Integer.parseInt(packet.parameters.get(0));
-                int messageId = Integer.parseInt(packet.parameters.get(1));
-                String username = packet.parameters.get(2);
-                String postDate = packet.parameters.get(3);
-                String subject = packet.parameters.get(4);
-
-                if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
-                    return; // Ignore messages from groups that we are not a part of
-
-                Message m = new Message(groupId, messageId, username, postDate, subject);
-                groups.get(groupId).messages.put(messageId, m);
-
-                ReceiveMessageLabelEventPayload payload = new ReceiveMessageLabelEventPayload();
-                payload.labelMessage = m;
-
-                receiveMessageLabelEvent.invoke(payload);
-                return;
-            }
-            case SEND_USER_LIST: {
-                int groupId = Integer.parseInt(packet.parameters.get(0));
-                String[] usernames = packet.parameters.get(1).split(",");
-
-                if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
-                    return; // Ignore messages from groups that we are not a part of
-
-                Group g = groups.get(groupId);
-
-                g.users.clear();
-
-                for (String name : usernames) {
-                    g.users.add(name);
+                    receiveMessageContentEvent.invoke(payload);
+                    break;
                 }
+            case SEND_MESSAGE_LABEL:
+                synchronized (receiveMessageLabelEvent) {
+                    int groupId = Integer.parseInt(packet.parameters.get(0));
+                    int messageId = Integer.parseInt(packet.parameters.get(1));
+                    String username = packet.parameters.get(2);
+                    String postDate = packet.parameters.get(3);
+                    String subject = packet.parameters.get(4);
 
-                ReceiveUserListEventPayload payload = new ReceiveUserListEventPayload();
-                payload.group = g;
+                    if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
+                        return; // Ignore messages from groups that we are not a part of
 
-                receiveUserListEvent.invoke(payload);
-                break;
-            }
-            case USER_JOIN_NOTIF: {
-                int groupId = Integer.parseInt(packet.parameters.get(0));
-                String username = packet.parameters.get(1);
+                    Message m = new Message(groupId, messageId, username, postDate, subject);
+                    groups.get(groupId).messages.put(messageId, m);
 
-                if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
-                    return; // Ignore messages from groups that we are not a part of
+                    ReceiveMessageLabelEventPayload payload = new ReceiveMessageLabelEventPayload();
+                    payload.labelMessage = m;
 
-                Group g = groups.get(groupId);
-
-                g.users.add(username);
-
-                UserJoinEventPayload payload = new UserJoinEventPayload();
-                payload.group = g;
-                payload.username = username;
-
-                userJoinEvent.invoke(payload);
-                return;
-            }
-            case USER_LEAVE_NOTIF: {
-                int groupId = Integer.parseInt(packet.parameters.get(0));
-                String username = packet.parameters.get(1);
-
-                if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
-                    return; // Ignore messages from groups that we are not a part of
-
-                Group g = groups.get(groupId);
-
-                g.users.remove(username);
-
-                UserLeaveEventPayload payload = new UserLeaveEventPayload();
-                payload.group = g;
-                payload.username = username;
-
-                userLeaveEvent.invoke(payload);
-                break;
-            }
-            case VERIFY_USERNAME: {
-                boolean success = Boolean.getBoolean(packet.parameters.get(0));
-
-                if (success) {
-                    joined = true;
+                    receiveMessageLabelEvent.invoke(payload);
+                    return;
                 }
+            case SEND_USER_LIST:
+                synchronized (receiveUserListEvent) {
+                    int groupId = Integer.parseInt(packet.parameters.get(0));
+                    String[] usernames = packet.parameters.get(1).split(",");
 
-                UsernameVerifyEventPayload payload = new UsernameVerifyEventPayload();
-                payload.isValid = success;
+                    if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
+                        return; // Ignore messages from groups that we are not a part of
 
-                usernameVerifyEvent.invoke(payload);
-                break;
-            }
+                    Group g = groups.get(groupId);
+
+                    g.users.clear();
+
+                    for (String name : usernames) {
+                        g.users.add(name);
+                    }
+
+                    ReceiveUserListEventPayload payload = new ReceiveUserListEventPayload();
+                    payload.group = g;
+
+                    receiveUserListEvent.invoke(payload);
+                    break;
+                }
+            case USER_JOIN_NOTIF:
+                synchronized (userJoinEvent) {
+                    int groupId = Integer.parseInt(packet.parameters.get(0));
+                    String username = packet.parameters.get(1);
+
+                    if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
+                        return; // Ignore messages from groups that we are not a part of
+
+                    Group g = groups.get(groupId);
+
+                    g.users.add(username);
+
+                    UserJoinEventPayload payload = new UserJoinEventPayload();
+                    payload.group = g;
+                    payload.username = username;
+
+                    userJoinEvent.invoke(payload);
+                    return;
+                }
+            case USER_LEAVE_NOTIF:
+                synchronized (userLeaveEvent) {
+                    int groupId = Integer.parseInt(packet.parameters.get(0));
+                    String username = packet.parameters.get(1);
+
+                    if (!groups.containsKey(groupId) || !userGroups.contains(groupId))
+                        return; // Ignore messages from groups that we are not a part of
+
+                    Group g = groups.get(groupId);
+
+                    g.users.remove(username);
+
+                    UserLeaveEventPayload payload = new UserLeaveEventPayload();
+                    payload.group = g;
+                    payload.username = username;
+
+                    userLeaveEvent.invoke(payload);
+                    break;
+                }
+            case VERIFY_USERNAME:
+                synchronized (usernameVerifyEvent) {
+                    System.out.println("Verify User");
+                    boolean success = Boolean.getBoolean(packet.parameters.get(0));
+
+                    if (success) {
+                        joined = true;
+                    }
+
+                    UsernameVerifyEventPayload payload = new UsernameVerifyEventPayload();
+                    payload.isValid = success;
+
+                    usernameVerifyEvent.invoke(payload);
+                    return;
+                }
             default:
                 break;
 
@@ -324,21 +338,23 @@ public class WebClient {
 
     }
 
-    public synchronized boolean join(String username) {
-        if (!joined) {
-            this.username = username;
-            ClientProtocol.createJoinPacket(username).send(outputStream);
+    public boolean join(String username) {
+        synchronized (usernameVerifyEvent) {
+            if (!joined) {
+                this.username = username;
+                ClientProtocol.createJoinPacket(username).send(outputStream);
 
-            UsernameVerifyEventPayload payload = usernameVerifyEvent.waitForEvent();
+                UsernameVerifyEventPayload payload = usernameVerifyEvent.waitForEvent();
 
-            if (payload.isValid) { // Join default group on join
-                groups.put(0, new Group(0, "Global"));
-                userGroups.add(0);
+                if (payload.isValid) { // Join default group on join
+                    groups.put(0, new Group(0, "Global"));
+                    userGroups.add(0);
+                }
+
+                return payload.isValid;
             }
-
-            return payload.isValid;
+            return false;
         }
-        return false;
     }
 
     public void postMessage(int groupId, String subject, String content) {
@@ -347,20 +363,22 @@ public class WebClient {
         }
     }
 
-    public synchronized Message retrieveMessage(int groupId, int messageId) {
-        if (joined) {
-            requestMessage(groupId, messageId);
+    public Message retrieveMessage(int groupId, int messageId) {
+        synchronized (receiveMessageContentEvent) {
+            if (joined) {
+                requestMessage(groupId, messageId);
 
-            Message retrievedMessage = null;
+                Message retrievedMessage = null;
 
-            while (retrievedMessage.messageId != messageId) {
-                retrievedMessage = receiveMessageContentEvent.waitForEvent().message;
+                while (retrievedMessage.messageId != messageId) {
+                    retrievedMessage = receiveMessageContentEvent.waitForEvent().message;
+                }
+
+                return retrievedMessage;
             }
 
-            return retrievedMessage;
+            return null;
         }
-
-        return null;
     }
 
     public void requestMessage(int groupId, int messageId) {
@@ -382,34 +400,38 @@ public class WebClient {
         }
     }
 
-    public synchronized Group retrieveGroupUsers(int groupId) {
-        if (joined) {
-            requestGroupUsers(groupId);
+    public Group retrieveGroupUsers(int groupId) {
+        synchronized (receiveUserListEvent) {
+            if (joined) {
+                requestGroupUsers(groupId);
 
-            Group retrievedGroup = null;
+                Group retrievedGroup = null;
 
-            while (retrievedGroup.id != groupId) {
-                retrievedGroup = receiveUserListEvent.waitForEvent().group;
+                while (retrievedGroup.id != groupId) {
+                    retrievedGroup = receiveUserListEvent.waitForEvent().group;
+                }
+
+                return retrievedGroup;
             }
 
-            return retrievedGroup;
+            return null;
         }
-
-        return null;
     }
 
     public void requestGroupUsers(int groupId) {
         ClientProtocol.createGroupPacket(GroupAction.USERS, groupId).send(outputStream);
     }
 
-    public synchronized ArrayList<Group> retrieveGroups() {
-        if (joined) {
-            requestGroups();
-            receiveGroupListEvent.waitForEvent();
-            return new ArrayList<Group>(groups.values());
-        }
+    public ArrayList<Group> retrieveGroups() {
+        synchronized (receiveGroupListEvent) {
+            if (joined) {
+                requestGroups();
+                receiveGroupListEvent.waitForEvent();
+                return new ArrayList<Group>(groups.values());
+            }
 
-        return null;
+            return null;
+        }
     }
 
     public void requestGroups() {

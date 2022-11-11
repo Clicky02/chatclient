@@ -9,7 +9,7 @@ import java.util.function.Function;
 import com.networking.chatclient.WebClient.Group;
 import com.networking.chatclient.WebClient.Message;
 
-public class CommandLineInterface extends Interface {
+public class CommandLineInterface extends UserInterface {
 
     /*
      * Class for each user command

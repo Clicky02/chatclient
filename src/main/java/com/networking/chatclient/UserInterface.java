@@ -1,9 +1,9 @@
 package com.networking.chatclient;
 
-public abstract class Interface implements Runnable {
+public abstract class UserInterface implements Runnable {
     final WebClient client;
 
-    public Interface(WebClient client) {
+    public UserInterface(WebClient client) {
         this.client = client;
     }
 
