@@ -10,7 +10,7 @@ public final class ServerProtocol {
         SEND_USER_LIST,
         SEND_GROUPS_LIST,
         SEND_MESSAGE_CONTENT,
-        BAD_MESSAGE
+        BAD_MESSAGE,
     }
 
     public static ProtocolPacket parseResponse(String str) {
@@ -20,7 +20,7 @@ public final class ServerProtocol {
 
         packet.setCommand(lines[0].trim());
 
-        for (int i = 1; i < lines.length - 1; i++) {
+        for (int i = 1; i < lines.length; i++) {
             packet.addParameter(lines[i].trim());
         }
 
@@ -28,6 +28,11 @@ public final class ServerProtocol {
     }
 
     public static ServerCommand getServerCommand(ProtocolPacket packet) {
-        return ServerCommand.valueOf(packet.getCommand());
+        try {
+            return ServerCommand.valueOf(packet.getCommand());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid Server Command");
+            return null;
+        }
     }
 }

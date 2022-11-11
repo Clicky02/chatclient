@@ -179,9 +179,12 @@ public class WebClient {
 
                     while (scanner.hasNext()) {
                         String message = scanner.next();
-                        System.out.println(message);
+
+                        if (message.equalsIgnoreCase(""))
+                            continue;
+                        System.out.println("Message: " + message);
+
                         ProtocolPacket packet = ServerProtocol.parseResponse(message);
-                        System.out.println(packet.command);
                         handleResponse(packet);
                     }
 
@@ -201,7 +204,10 @@ public class WebClient {
      */
     public void handleResponse(ProtocolPacket packet) {
         ServerCommand command = ServerProtocol.getServerCommand(packet);
-        System.out.println(command);
+
+        if (command == null)
+            return;
+
         switch (command) {
             case BAD_MESSAGE:
                 System.out.println("Something went wrong");
