@@ -437,9 +437,13 @@ public class WebClient {
         }
     }
 
-    public void logOut() {
+    public synchronized void logOut() {
         if (joined) {
             ClientProtocol.createLeavePacket().send(outputStream);
+
+            UserLeaveEventPayload payload = null;
+            while (payload == null || payload.username != username || payload.group.id == 0)
+                payload = userLeaveEvent.waitForEvent();
 
             // Reset server info
             joined = false;
