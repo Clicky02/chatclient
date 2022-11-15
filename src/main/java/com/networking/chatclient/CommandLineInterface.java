@@ -230,14 +230,14 @@ public class CommandLineInterface extends UserInterface {
 
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
-                    System.out.println("Invalid Group.\n");
+                    System.out.println("Invalid Group.");
                     return false;
                 }
 
                 String subject = args.get(2);
                 String content = args.get(3);
                 client.postMessage(groupId, subject, content);
-                System.out.println("Message Posted.\n");
+                System.out.println("Message Posted.");
                 return true;
             }),
 
@@ -246,7 +246,7 @@ public class CommandLineInterface extends UserInterface {
 
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
-                    System.out.println("Invalid Group.\n");
+                    System.out.println("Invalid Group.");
                     return false;
                 }
 
@@ -269,12 +269,12 @@ public class CommandLineInterface extends UserInterface {
 
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
-                    System.out.println("Invalid Group.\n");
+                    System.out.println("Invalid Group.");
                     return false;
                 }
 
                 client.leaveGroup(groupId);
-                System.out.println("Left group.\n");
+                System.out.println("Left group.");
                 return true;
             }),
 
@@ -283,16 +283,23 @@ public class CommandLineInterface extends UserInterface {
 
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
-                    System.out.println("Invalid Group.\n");
+                    System.out.println("Invalid Group.");
                     return false;
                 }
 
                 int messageId = getMessageIdFromArgument(groupId, args.get(2));
                 if (messageId == -1) {
-                    System.out.println("Invalid message Id.\n");
+                    System.out.println("Invalid message Id.");
                     return false;
                 }
+
                 Message m = client.retrieveMessage(groupId, messageId);
+
+                if (m == null) {
+                    System.out.println("Could not retrieve message " + messageId + " from the server.");
+                    return false;
+                }
+
                 System.out.println("Message " + m.messageId + ": " + m.getContent());
                 return true;
 
@@ -312,7 +319,6 @@ public class CommandLineInterface extends UserInterface {
     public void run() {
 
         client.receiveMessageLabelEvent.onEvent((payload) -> {
-            System.out.print("Message Label Event");
             synchronized (this) {
                 Message m = payload.labelMessage;
                 System.out.print("\b\b\n");

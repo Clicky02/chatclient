@@ -127,7 +127,8 @@ public class WebClient {
     public class ReceiveMessageContentEventPayload {
         int groupId;
         int messageId;
-        Message message;
+        Message message; // Will be null if validId is false or if it could not find the message label
+        boolean validId;
     }
 
     ClientEvent<ReceiveMessageContentEventPayload> receiveMessageContentEvent = new ClientEvent<ReceiveMessageContentEventPayload>(
@@ -243,16 +244,22 @@ public class WebClient {
                 int groupId = Integer.parseInt(packet.parameters.get(0));
                 int messageId = Integer.parseInt(packet.parameters.get(1));
                 String content = packet.parameters.get(2);
+                boolean validId = (packet.parameters.get(3).equals("1"));
 
-                Message m = getSavedMessage(groupId, messageId);
+                Message m = null;
 
-                if (m != null)
-                    m.setContent(content);
+                if (validId) {
+                    m = getSavedMessage(groupId, messageId);
+
+                    if (m != null)
+                        m.setContent(content);
+                }
 
                 ReceiveMessageContentEventPayload payload = new ReceiveMessageContentEventPayload();
                 payload.groupId = groupId;
                 payload.messageId = messageId;
                 payload.message = m;
+                payload.validId = validId;
 
                 receiveMessageContentEvent.invoke(payload);
                 break;
@@ -486,19 +493,13 @@ public class WebClient {
     }
 
     final public Message getSavedMessage(int groupId, int messageId) {
-        System.out.println("getting saved message");
-
         if (!groups.containsKey(groupId))
             return null;
-
-        System.out.println("has group");
 
         Group g = groups.get(groupId);
 
         if (!g.messages.containsKey(messageId))
             return null;
-
-        System.out.println("has message");
 
         return g.messages.get(messageId);
     }
