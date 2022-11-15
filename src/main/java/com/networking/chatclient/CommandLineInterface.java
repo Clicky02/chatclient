@@ -156,8 +156,10 @@ public class CommandLineInterface extends UserInterface {
                     if (i != g.users.size() - 1) {
                         System.out.print(", ");
                     }
-                    System.out.print("\n");
                 }
+
+                System.out.print("\n");
+
                 return true;
             }),
 
@@ -264,8 +266,9 @@ public class CommandLineInterface extends UserInterface {
                     if (i != g.users.size() - 1) {
                         System.out.print(", ");
                     }
-                    System.out.print("\n\n");
                 }
+
+                System.out.print("\n");
 
                 return true;
             }),

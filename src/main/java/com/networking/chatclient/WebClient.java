@@ -214,9 +214,15 @@ public class WebClient {
 
         ServerCommand command = ServerProtocol.getServerCommand(packet);
 
-        if (command == null || packet.parameters.size() < command.minParameters) {
-            System.out.println("Invalid Server Packet Received.");
+        if (command == null) {
+            System.out.println("Invalid Server Packet Received : Invalid Command");
             System.out.println("Command: " + packet.command);
+            return;
+        } else if (packet.parameters.size() < command.minParameters) {
+            System.out.println("Invalid Server Packet Received : Too few parameter");
+            System.out.println("Command: " + packet.command);
+            System.out.println(
+                    "Expected " + command.minParameters + " parameters, received " + packet.parameters.size() + ".");
             return;
         }
 
