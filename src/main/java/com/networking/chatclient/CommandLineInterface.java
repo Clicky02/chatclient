@@ -70,7 +70,7 @@ public class CommandLineInterface extends UserInterface {
             }
 
             if (args.size() < minimumArgumentCount) {
-                System.out.println(name + " requires at least " + minimumArgumentCount + " arguments.");
+                System.out.println(name + " requires at least " + (minimumArgumentCount - 1) + " arguments.");
                 System.out.println("Usage: " + getCommandUsage());
                 return false;
             }
