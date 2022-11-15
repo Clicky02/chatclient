@@ -24,17 +24,38 @@ public class CommandLineInterface extends UserInterface {
         String name;
         int minimumArgumentCount;
         Function<ArrayList<String>, Boolean> commandFunction;
+        String[] argumentDescriptions;
         boolean mustBeJoined = true;
 
-        public Command(String name, int minimumArgumentCount, Function<ArrayList<String>, Boolean> commandFunction) {
+        public Command(String name, int minimumArgumentCount,
+                Function<ArrayList<String>, Boolean> commandFunction) {
             this.name = name;
+            this.argumentDescriptions = new String[] {};
             this.minimumArgumentCount = minimumArgumentCount;
             this.commandFunction = commandFunction;
         }
 
-        public Command(String name, int minimumArgumentCount, Function<ArrayList<String>, Boolean> commandFunction,
-                boolean mustBeJoined) {
+        public Command(String name, int minimumArgumentCount,
+                Function<ArrayList<String>, Boolean> commandFunction, boolean mustBeJoined) {
             this.name = name;
+            this.argumentDescriptions = new String[] {};
+            this.minimumArgumentCount = minimumArgumentCount;
+            this.commandFunction = commandFunction;
+            this.mustBeJoined = mustBeJoined;
+        }
+
+        public Command(String name, int minimumArgumentCount, String[] argumentDescriptions,
+                Function<ArrayList<String>, Boolean> commandFunction) {
+            this.name = name;
+            this.argumentDescriptions = argumentDescriptions;
+            this.minimumArgumentCount = minimumArgumentCount;
+            this.commandFunction = commandFunction;
+        }
+
+        public Command(String name, int minimumArgumentCount, String[] argumentDescriptions,
+                Function<ArrayList<String>, Boolean> commandFunction, boolean mustBeJoined) {
+            this.name = name;
+            this.argumentDescriptions = argumentDescriptions;
             this.minimumArgumentCount = minimumArgumentCount;
             this.commandFunction = commandFunction;
             this.mustBeJoined = mustBeJoined;
@@ -62,19 +83,21 @@ public class CommandLineInterface extends UserInterface {
      */
     Command[] commands = {
             new Command("help", 1, (args) -> {
-                System.out.print("Available Commands: ");
+                System.out.print("Available Commands: \n");
                 for (int i = 0; i < this.commands.length; i++) {
                     Command c = this.commands[i];
-                    System.out.print(c.name);
-                    if (i != this.commands.length - 1) {
-                        System.out.print(", ");
+                    System.out.print("\t" + c.name);
+
+                    for (int j = 0; j < c.argumentDescriptions.length; j++) {
+                        System.out.print(" <" + c.argumentDescriptions[j] + ">");
                     }
+
+                    System.out.print("\n");
                 }
-                System.out.print("\n");
                 return true;
             }, false),
 
-            new Command("connect", 3, (args) -> {
+            new Command("connect", 3, new String[] { "host", "port" }, (args) -> {
                 if (client.socket != null && client.socket.isConnected()) {
                     System.out.println("You are already connected to a server.");
                     return false;
@@ -94,7 +117,7 @@ public class CommandLineInterface extends UserInterface {
                 }
             }, false),
 
-            new Command("join", 2, (args) -> {
+            new Command("join", 2, new String[] { "username" }, (args) -> {
                 if (client.socket == null || !client.socket.isConnected()) {
                     System.out.println("You must first connect to a server.");
                     System.out.println("Run the command \"connect <host> <port>\" to connect to a server.");
@@ -111,7 +134,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }, false),
 
-            new Command("post", 3, (args) -> {
+            new Command("post", 3, new String[] { "subject", "content" }, (args) -> {
                 String subject = args.get(1);
                 String content = args.get(2);
                 client.postMessage(0, subject, content);
@@ -143,7 +166,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("message", 2, (args) -> {
+            new Command("message", 2, new String[] { "messageId" }, (args) -> {
                 int messageId = getMessageIdFromArgument(0, args.get(1));
                 if (messageId == -1) {
                     System.out.println("Invalid message Id.");
@@ -179,12 +202,14 @@ public class CommandLineInterface extends UserInterface {
                     if (i != groups.size() - 1) {
                         System.out.print(", ");
                     }
-                    System.out.print("\n");
                 }
+
+                System.out.print("\n");
+
                 return true;
             }),
 
-            new Command("groupjoin", 2, (args) -> {
+            new Command("groupjoin", 2, new String[] { "group id/name" }, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
@@ -199,7 +224,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("grouppost", 4, (args) -> {
+            new Command("grouppost", 4, new String[] { "group id/name", "subject", "content" }, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
@@ -215,7 +240,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("groupusers", 2, (args) -> {
+            new Command("groupusers", 2, new String[] { "group id/name" }, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
@@ -238,7 +263,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("groupleave", 2, (args) -> {
+            new Command("groupleave", 2, new String[] { "group id/name" }, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
@@ -252,7 +277,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("groupmessage", 3, (args) -> {
+            new Command("groupmessage", 3, new String[] { "group id/name", "message id" }, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
