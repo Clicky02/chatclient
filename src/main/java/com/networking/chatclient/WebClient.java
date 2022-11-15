@@ -190,9 +190,9 @@ public class WebClient {
 
                         final ProtocolPacket packet = ServerProtocol.parseResponse(message);
 
-                        new Thread(() -> {
+                        (new Thread(() -> {
                             handleResponse(packet);
-                        });
+                        })).start();
                     }
 
                     scanner.close();
@@ -210,6 +210,7 @@ public class WebClient {
      * Handles a response packet.
      */
     public synchronized void handleResponse(ProtocolPacket packet) {
+
         ServerCommand command = ServerProtocol.getServerCommand(packet);
 
         if (command == null || packet.parameters.size() < command.parameters) {
