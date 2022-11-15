@@ -252,7 +252,7 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            new Command("groupmessage", 2, (args) -> {
+            new Command("groupmessage", 3, (args) -> {
                 // client.retrieveGroups();
 
                 int groupId = getGroupIdFromArgument(args.get(1));
@@ -261,7 +261,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                int messageId = getMessageIdFromArgument(groupId, args.get(1));
+                int messageId = getMessageIdFromArgument(groupId, args.get(2));
                 if (messageId == -1) {
                     System.out.println("Invalid message Id.\n");
                     return false;
