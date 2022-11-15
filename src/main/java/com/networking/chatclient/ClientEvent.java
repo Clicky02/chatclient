@@ -22,7 +22,7 @@ public class ClientEvent<T> {
     public T waitForEvent() {
         synchronized (lockingObject) {
             try {
-                this.wait();
+                lockingObject.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 return null;
@@ -41,7 +41,7 @@ public class ClientEvent<T> {
     public void invoke(T eventParameter) {
         synchronized (lockingObject) {
             this.eventParameter = eventParameter;
-            this.notifyAll();
+            lockingObject.notifyAll();
             for (Consumer<T> eventFunction : eventFunctions.values()) {
                 eventFunction.accept(eventParameter);
             }
