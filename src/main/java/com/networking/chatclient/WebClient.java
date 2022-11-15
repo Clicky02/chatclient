@@ -399,7 +399,7 @@ public class WebClient {
         if (!joined)
             return false;
 
-        if (!isValidGroupId(groupId))
+        if (!isValidGroupId(groupId, true, false))
             return false;
 
         ClientProtocol.createMessagePacket(MessageAction.POST, groupId, -1, subject, content).send(outputStream);
@@ -427,7 +427,7 @@ public class WebClient {
         if (!joined)
             return false;
 
-        if (!isValidGroupId(groupId))
+        if (!isValidGroupId(groupId, true, false))
             return false;
 
         ClientProtocol.createMessagePacket(MessageAction.RETRIEVE, groupId, messageId, "", "")
@@ -440,7 +440,7 @@ public class WebClient {
         if (!joined)
             return false;
 
-        if (!isValidGroupId(groupId))
+        if (!isValidGroupId(groupId, false, true))
             return false;
 
         userGroups.add(groupId);
@@ -453,7 +453,7 @@ public class WebClient {
         if (!joined)
             return false;
 
-        if (!isValidGroupId(groupId))
+        if (!isValidGroupId(groupId, true, false))
             return false;
 
         userGroups.remove(groupId);
@@ -500,7 +500,7 @@ public class WebClient {
         if (!joined)
             return false;
 
-        if (!isValidGroupId(groupId))
+        if (!isValidGroupId(groupId, false, false))
             return false;
 
         ClientProtocol.createGroupPacket(GroupAction.USERS, groupId).send(outputStream);
@@ -558,13 +558,22 @@ public class WebClient {
         return g.messages.get(messageId);
     }
 
-    public synchronized boolean isValidGroupId(int groupId) {
-        if (groups.containsKey(groupId))
-            return true;
+    public synchronized boolean isValidGroupId(int groupId, boolean mustBeInGroup, boolean mustNotBeInGroup) {
 
-        retrieveGroups();
+        if (!groups.containsKey(groupId)) {
+            retrieveGroups();
+            if (!groups.containsKey(groupId)) {
+                return false;
+            }
+        }
 
-        return groups.containsKey(groupId);
+        if (mustBeInGroup && !userGroups.contains(groupId))
+            return false;
+
+        if (mustNotBeInGroup && userGroups.contains(groupId))
+            return false;
+
+        return true;
     }
 
 }

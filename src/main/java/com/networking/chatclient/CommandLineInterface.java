@@ -238,6 +238,11 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
+                if (client.userGroups.contains(groupId)) {
+                    System.out.println("Already in group.");
+                    return false;
+                }
+
                 if (!client.joinGroup(groupId)) {
                     System.out.println("Unable to join group.");
                     return false;
@@ -254,6 +259,11 @@ public class CommandLineInterface extends UserInterface {
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.");
+                    return false;
+                }
+
+                if (!client.userGroups.contains(groupId)) {
+                    System.out.println("Not in group.");
                     return false;
                 }
 
@@ -307,6 +317,11 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
+                if (!client.userGroups.contains(groupId)) {
+                    System.out.println("Not in group.");
+                    return false;
+                }
+
                 if (client.leaveGroup(groupId)) {
                     System.out.println("Left group.");
                     return true;
@@ -323,6 +338,11 @@ public class CommandLineInterface extends UserInterface {
                 int groupId = getGroupIdFromArgument(args.get(1));
                 if (groupId == -1) {
                     System.out.println("Invalid Group.");
+                    return false;
+                }
+
+                if (!client.userGroups.contains(groupId)) {
+                    System.out.println("Not in group.");
                     return false;
                 }
 
@@ -400,7 +420,7 @@ public class CommandLineInterface extends UserInterface {
             groupId = Integer.parseInt(argument);
 
             // Make sure groupId actually exists
-            if (!client.isValidGroupId(groupId)) {
+            if (!client.isValidGroupId(groupId, false, false)) {
                 return -1;
             }
         } catch (NumberFormatException e) {
