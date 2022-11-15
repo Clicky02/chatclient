@@ -369,7 +369,7 @@ public class CommandLineInterface extends UserInterface {
         } catch (NumberFormatException e) {
             String groupName = argument;
             for (Group g : client.groups.values()) {
-                if (g.name == groupName) {
+                if (g.name.equals(groupName)) {
                     groupId = g.id;
                 }
             }

@@ -7,15 +7,15 @@ public final class ServerProtocol {
         USER_JOIN_NOTIF(2),
         USER_LEAVE_NOTIF(2),
         SEND_MESSAGE_LABEL(5),
-        SEND_USER_LIST(2),
+        SEND_USER_LIST(1),
         SEND_GROUPS_LIST(2),
         SEND_MESSAGE_CONTENT(3),
         BAD_MESSAGE(0);
 
-        int parameters;
+        int minParameters;
 
-        ServerCommand(int parameters) {
-            this.parameters = parameters;
+        ServerCommand(int minParameters) {
+            this.minParameters = minParameters;
         }
     }
 

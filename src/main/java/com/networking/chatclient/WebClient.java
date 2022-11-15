@@ -214,7 +214,7 @@ public class WebClient {
 
         ServerCommand command = ServerProtocol.getServerCommand(packet);
 
-        if (command == null || packet.parameters.size() < command.parameters) {
+        if (command == null || packet.parameters.size() < command.minParameters) {
             System.out.println("Invalid Server Packet Received.");
             System.out.println("Command: " + packet.command);
             return;
@@ -285,7 +285,10 @@ public class WebClient {
             }
             case SEND_USER_LIST: {
                 int groupId = Integer.parseInt(packet.parameters.get(0));
-                String[] usernames = packet.parameters.get(1).split(",");
+
+                String[] usernames = packet.parameters.size() > 1 ? packet.parameters.get(1).split(",")
+                        : new String[] {}; // If there is not a second paramter, there are no users, so create an empty
+                                           // list
 
                 if (!groups.containsKey(groupId))
                     retrieveGroups(); // Ignore messages from groups that we are not a part of
