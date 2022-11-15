@@ -174,6 +174,12 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
                 Message m = client.retrieveMessage(0, messageId);
+
+                if (m == null) {
+                    System.out.println("Could not retrieve message " + messageId + " from the server.");
+                    return false;
+                }
+
                 System.out.println("Message " + m.messageId + ": " + m.getContent());
                 return true;
 
