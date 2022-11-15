@@ -406,6 +406,18 @@ public class WebClient {
         }
     }
 
+    public void logOut() {
+        if (joined) {
+            ClientProtocol.createLeavePacket().send(outputStream);
+
+            // Reset server info
+            joined = false;
+            username = null;
+            userGroups.clear();
+            groups.clear();
+        }
+    }
+
     public Group retrieveGroupUsers(int groupId) {
         synchronized (receiveUserListEvent) {
             if (joined) {

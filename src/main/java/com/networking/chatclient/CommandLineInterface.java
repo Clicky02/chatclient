@@ -70,11 +70,22 @@ public class CommandLineInterface extends UserInterface {
             }
 
             if (args.size() < minimumArgumentCount) {
-                System.out.println(name + " requires at least" + minimumArgumentCount + " arguments.");
+                System.out.println(name + " requires at least " + minimumArgumentCount + " arguments.");
+                System.out.println("Usage: " + getCommandUsage());
                 return false;
             }
 
             return commandFunction.apply(args);
+        }
+
+        public String getCommandUsage() {
+            StringBuilder usage = new StringBuilder(name);
+
+            for (int i = 0; i < argumentDescriptions.length; i++) {
+                usage.append(" <" + argumentDescriptions[i] + ">");
+            }
+
+            return usage.toString();
         }
     }
 
@@ -86,13 +97,7 @@ public class CommandLineInterface extends UserInterface {
                 System.out.print("Available Commands: \n");
                 for (int i = 0; i < this.commands.length; i++) {
                     Command c = this.commands[i];
-                    System.out.print("\t" + c.name);
-
-                    for (int j = 0; j < c.argumentDescriptions.length; j++) {
-                        System.out.print(" <" + c.argumentDescriptions[j] + ">");
-                    }
-
-                    System.out.print("\n");
+                    System.out.print("\t" + c.getCommandUsage() + "\n");
                 }
                 return true;
             }, false),
@@ -156,13 +161,9 @@ public class CommandLineInterface extends UserInterface {
                 return true;
             }),
 
-            // TODO : What?
             new Command("leave", 1, (args) -> {
-                for (int id : client.userGroups) {
-                    client.leaveGroup(id);
-                }
-                client.joined = false;
-                System.out.println("Left server.\n");
+                client.logOut();
+                System.out.println("Logged out of server.\n");
                 return true;
             }),
 
@@ -319,33 +320,6 @@ public class CommandLineInterface extends UserInterface {
                 System.out.print("> ");
             }
         });
-
-        // boolean connected = false;
-        // while (!connected) {
-        // try {
-        // System.out.print("Enter the host: ");
-        // String host = reader.readLine();
-
-        // System.out.print("Enter the port: ");
-        // int port = Integer.parseInt(reader.readLine());
-
-        // client.connect(host, port);
-        // connected = true;
-        // } catch (IOException e) {
-        // System.out.println("IO Exception Occured: " + e.getMessage());
-        // } catch (NumberFormatException e) {
-        // System.out.println("The port must be an integer.\n");
-        // }
-        // }
-
-        // System.out.print("Connected!");
-
-        // while (!client.joined) {
-        // String username = getString("Enter your username: ");
-        // if (!client.join(username)) {
-        // System.out.println("Invalid Username. ");
-        // }
-        // }
 
         System.out.println("Enter a command or enter help to get a list of commands.");
 

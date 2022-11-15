@@ -20,6 +20,12 @@ public final class ClientProtocol {
         return packet;
     }
 
+    public static ProtocolPacket createLeavePacket() {
+        ProtocolPacket packet = new ProtocolPacket();
+        packet.setCommand("LEAVE");
+        return packet;
+    }
+
     public static ProtocolPacket createMessagePacket(MessageAction action, int groupId, int messageId,
             String subject, String content) {
         ProtocolPacket packet = new ProtocolPacket();
