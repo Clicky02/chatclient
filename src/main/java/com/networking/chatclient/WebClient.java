@@ -442,7 +442,7 @@ public class WebClient {
             ClientProtocol.createLeavePacket().send(outputStream);
 
             UserLeaveEventPayload payload = null;
-            while (payload == null || payload.username != username || payload.group.id == 0)
+            while (payload == null || payload.username != username || payload.group.id != 0)
                 payload = userLeaveEvent.waitForEvent();
 
             // Reset server info
