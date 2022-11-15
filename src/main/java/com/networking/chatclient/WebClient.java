@@ -391,19 +391,24 @@ public class WebClient {
 
             return payload.isValid;
         }
-        return false;
 
+        return false;
     }
 
-    public void postMessage(int groupId, String subject, String content) {
-        if (joined) {
-            ClientProtocol.createMessagePacket(MessageAction.POST, groupId, -1, subject, content).send(outputStream);
-        }
+    public boolean postMessage(int groupId, String subject, String content) {
+        if (!joined)
+            return false;
+
+        if (!isValidGroupId(groupId))
+            return false;
+
+        ClientProtocol.createMessagePacket(MessageAction.POST, groupId, -1, subject, content).send(outputStream);
+
+        return true;
     }
 
     public synchronized Message retrieveMessage(int groupId, int messageId) {
-        if (joined) {
-            requestMessage(groupId, messageId);
+        if (joined && requestMessage(groupId, messageId)) {
 
             ReceiveMessageContentEventPayload messagePayload = null;
             while (messagePayload == null || messagePayload.groupId != groupId
@@ -418,23 +423,43 @@ public class WebClient {
 
     }
 
-    public void requestMessage(int groupId, int messageId) {
+    public boolean requestMessage(int groupId, int messageId) {
+        if (!joined)
+            return false;
+
+        if (!isValidGroupId(groupId))
+            return false;
+
         ClientProtocol.createMessagePacket(MessageAction.RETRIEVE, groupId, messageId, "", "")
                 .send(outputStream);
+
+        return true;
     }
 
-    public void joinGroup(int groupId) {
-        if (joined) {
-            userGroups.add(groupId);
-            ClientProtocol.createGroupPacket(GroupAction.JOIN, groupId).send(outputStream);
-        }
+    public boolean joinGroup(int groupId) {
+        if (!joined)
+            return false;
+
+        if (!isValidGroupId(groupId))
+            return false;
+
+        userGroups.add(groupId);
+        ClientProtocol.createGroupPacket(GroupAction.JOIN, groupId).send(outputStream);
+
+        return true;
     }
 
-    public void leaveGroup(int groupId) {
-        if (joined) {
-            userGroups.remove(groupId);
-            ClientProtocol.createGroupPacket(GroupAction.LEAVE, groupId).send(outputStream);
-        }
+    public boolean leaveGroup(int groupId) {
+        if (!joined)
+            return false;
+
+        if (!isValidGroupId(groupId))
+            return false;
+
+        userGroups.remove(groupId);
+        ClientProtocol.createGroupPacket(GroupAction.LEAVE, groupId).send(outputStream);
+
+        return true;
     }
 
     public synchronized void logOut() {
@@ -456,8 +481,7 @@ public class WebClient {
 
     public synchronized Group retrieveGroupUsers(int groupId) {
 
-        if (joined) {
-            requestGroupUsers(groupId);
+        if (joined && requestGroupUsers(groupId)) {
 
             Group retrievedGroup = null;
 
@@ -472,8 +496,16 @@ public class WebClient {
 
     }
 
-    public void requestGroupUsers(int groupId) {
+    public boolean requestGroupUsers(int groupId) {
+        if (!joined)
+            return false;
+
+        if (!isValidGroupId(groupId))
+            return false;
+
         ClientProtocol.createGroupPacket(GroupAction.USERS, groupId).send(outputStream);
+
+        return true;
     }
 
     public synchronized ArrayList<Group> retrieveGroups() {
@@ -524,6 +556,15 @@ public class WebClient {
             return null;
 
         return g.messages.get(messageId);
+    }
+
+    public synchronized boolean isValidGroupId(int groupId) {
+        if (groups.containsKey(groupId))
+            return true;
+
+        retrieveGroups();
+
+        return groups.containsKey(groupId);
     }
 
 }

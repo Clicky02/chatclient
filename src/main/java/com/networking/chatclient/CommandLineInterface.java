@@ -142,13 +142,23 @@ public class CommandLineInterface extends UserInterface {
             new Command("post", 3, new String[] { "subject", "content" }, (args) -> {
                 String subject = args.get(1);
                 String content = args.get(2);
-                client.postMessage(0, subject, content);
-                System.out.println("Message Posted.");
+
+                if (!client.postMessage(0, subject, content)) {
+                    System.out.println("Unable to post message.");
+                    return false;
+                }
+
+                System.out.println("Message posted.");
                 return true;
             }),
 
             new Command("users", 1, (args) -> {
                 Group g = client.retrieveGroupUsers(0);
+
+                if (g == null) {
+                    System.out.println("Unable to retrieve users.");
+                    return false;
+                }
 
                 System.out.print("Users for global group: ");
                 for (int i = 0; i < g.users.size(); i++) {
@@ -165,7 +175,7 @@ public class CommandLineInterface extends UserInterface {
 
             new Command("leave", 1, (args) -> {
                 client.logOut();
-                System.out.println("Logged out of server.\n");
+                System.out.println("Logged out of server.");
                 return true;
             }),
 
@@ -175,6 +185,7 @@ public class CommandLineInterface extends UserInterface {
                     System.out.println("Invalid message Id.");
                     return false;
                 }
+
                 Message m = client.retrieveMessage(0, messageId);
 
                 if (m == null) {
@@ -227,7 +238,11 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                client.joinGroup(groupId);
+                if (!client.joinGroup(groupId)) {
+                    System.out.println("Unable to join group.");
+                    return false;
+                }
+
                 System.out.println("Joined group.");
 
                 return true;
@@ -244,8 +259,13 @@ public class CommandLineInterface extends UserInterface {
 
                 String subject = args.get(2);
                 String content = args.get(3);
-                client.postMessage(groupId, subject, content);
-                System.out.println("Message Posted.");
+
+                if (!client.postMessage(groupId, subject, content)) {
+                    System.out.println("Unable to post message.");
+                    return false;
+                }
+
+                System.out.println("Message posted.");
                 return true;
             }),
 
@@ -259,6 +279,11 @@ public class CommandLineInterface extends UserInterface {
                 }
 
                 Group g = client.retrieveGroupUsers(groupId);
+
+                if (g == null) {
+                    System.out.println("Unable to retrieve users.");
+                    return false;
+                }
 
                 System.out.print("Users for " + g.name + ": ");
                 for (int i = 0; i < g.users.size(); i++) {
@@ -282,9 +307,14 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                client.leaveGroup(groupId);
-                System.out.println("Left group.");
-                return true;
+                if (client.leaveGroup(groupId)) {
+                    System.out.println("Left group.");
+                    return true;
+                } else {
+                    System.out.println("Unable to leave group.");
+                    return false;
+                }
+
             }),
 
             new Command("groupmessage", 3, new String[] { "group id/name", "message id" }, (args) -> {
@@ -369,9 +399,15 @@ public class CommandLineInterface extends UserInterface {
         try {
             groupId = Integer.parseInt(argument);
 
+            // Make sure groupId actually exists
+            if (!client.isValidGroupId(groupId)) {
+                return -1;
+            }
         } catch (NumberFormatException e) {
             String groupName = argument;
             for (Group g : client.groups.values()) {
+                System.out.println(g.name);
+                System.out.println(groupName);
                 if (g.name.equals(groupName)) {
                     groupId = g.id;
                 }
@@ -381,7 +417,6 @@ public class CommandLineInterface extends UserInterface {
         return groupId;
     }
 
-    // TODO : Make sure id exists
     private int getMessageIdFromArgument(int groupId, String argument) {
         int messageId = -1;
         try {
