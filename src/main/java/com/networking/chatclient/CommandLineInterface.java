@@ -208,8 +208,8 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                String subject = args.get(1);
-                String content = args.get(2);
+                String subject = args.get(2);
+                String content = args.get(3);
                 client.postMessage(groupId, subject, content);
                 System.out.println("Message Posted.\n");
                 return true;
