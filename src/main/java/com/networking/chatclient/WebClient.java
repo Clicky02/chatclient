@@ -214,6 +214,7 @@ public class WebClient {
 
         ServerCommand command = ServerProtocol.getServerCommand(packet);
 
+        // Make sure the packet is valid
         if (command == null) {
             System.out.println("Invalid Server Packet Received : Invalid Command");
             System.out.println("Command: " + packet.command);
@@ -224,8 +225,14 @@ public class WebClient {
             System.out.println(
                     "Expected " + command.minParameters + " parameters, received " + packet.parameters.size() + ".");
             return;
+        } else if (!joined && !(command == ServerCommand.BAD_MESSAGE || command == ServerCommand.VERIFY_USERNAME)) {
+            System.out.println(
+                    "Invalid Server Packet Received : Received packet other than VERIFY_USERNAME or BAD_MESSAGE before joining server");
+            System.out.println("Command: " + packet.command);
+            return;
         }
 
+        // Handle the packet
         switch (command) {
             case BAD_MESSAGE:
                 System.out.println("Something went wrong");
@@ -293,7 +300,8 @@ public class WebClient {
                 int groupId = Integer.parseInt(packet.parameters.get(0));
 
                 String[] usernames = packet.parameters.size() > 1 ? packet.parameters.get(1).split(",")
-                        : new String[] {}; // If there is not a second paramter, there are no users, so create an empty
+                        : new String[] {}; // If there is not a second paramter, there are no users, so create an
+                                           // empty
                                            // list
 
                 if (!groups.containsKey(groupId))
