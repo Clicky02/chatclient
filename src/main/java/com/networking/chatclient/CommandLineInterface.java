@@ -384,7 +384,10 @@ public class CommandLineInterface extends UserInterface {
             synchronized (this) {
                 Message m = payload.labelMessage;
                 System.out.print("\b\b\n");
-                System.out.println("(" + m.messageId + ") " + m.subject + " " + m.username + " " + m.postDate);
+                System.out.println("------------------------------------------------------------------------");
+                System.out
+                        .println("Id: " + m.messageId + "\tGroup: " + m.subject + " " + m.username + " " + m.postDate);
+                System.out.println("------------------------------------------------------------------------");
                 System.out.print("> ");
             }
         });
