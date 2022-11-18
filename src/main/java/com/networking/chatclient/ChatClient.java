@@ -259,12 +259,13 @@ public class ChatClient {
                 String[] names = packet.parameters.get(0).split(",");
                 String[] ids = packet.parameters.get(1).split(",");
 
+                System.out.print(packet.getCommand());
+                System.out.print(packet.getContent());
+
                 for (int i = 0; i < ids.length; i++) {
                     int id = Integer.parseInt(ids[i]);
                     if (!groups.containsKey(id)) {
                         groups.put(id, new Group(Integer.parseInt(ids[i]), names[i]));
-                    } else {
-
                     }
                 }
 

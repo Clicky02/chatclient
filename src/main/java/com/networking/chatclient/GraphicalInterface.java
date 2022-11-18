@@ -270,10 +270,6 @@ class ChatFrame extends JFrame {
         groupPane.setTopComponent(allGroupsPanel);
 
         // Create the model for the all groups list
-        for (Group g : client.groups.values()) {
-            System.out.println(g);
-        }
-
         allListModel = new DefaultListModel<Group>();
         allListModel.addAll(client.groups.values()); // add all possible groups
 
