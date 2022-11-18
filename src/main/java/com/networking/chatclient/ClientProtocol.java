@@ -1,5 +1,8 @@
 package com.networking.chatclient;
 
+/*
+ * A namespace for types and functions for sending messages to the server
+ */
 public final class ClientProtocol {
     public enum MessageAction {
         POST,

@@ -8,9 +8,12 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.networking.chatclient.WebClient.Group;
-import com.networking.chatclient.WebClient.Message;
+import com.networking.chatclient.ChatClient.Group;
+import com.networking.chatclient.ChatClient.Message;
 
+/*
+ * The code for the command line user interface
+ */
 public class CommandLineInterface extends UserInterface {
 
     /*
@@ -61,7 +64,7 @@ public class CommandLineInterface extends UserInterface {
             this.mustBeJoined = mustBeJoined;
         }
 
-        public boolean run(WebClient client, ArrayList<String> args) {
+        public boolean run(ChatClient client, ArrayList<String> args) {
             if (mustBeJoined && !client.joined) {
                 System.out.println("You must have connected to and joined a sever to perform this command.");
                 System.out.println("Run the command \"connect <host> <port>\" to connect to a server.");
@@ -368,7 +371,7 @@ public class CommandLineInterface extends UserInterface {
 
     BufferedReader reader; // The buffered reader for System.in
 
-    public CommandLineInterface(WebClient client) {
+    public CommandLineInterface(ChatClient client) {
         super(client);
 
         reader = new BufferedReader(new InputStreamReader(System.in));

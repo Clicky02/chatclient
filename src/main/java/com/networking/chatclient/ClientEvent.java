@@ -3,6 +3,13 @@ package com.networking.chatclient;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
+/*
+ * A general class used for client events.
+ * 
+ * Code can interact with these events in 2 ways. It can "listen" to the event 
+ * (have a function be called when the event occurs), or it can wait for the 
+ * event (block until the event occurs).
+ */
 public class ClientEvent<T> {
 
     T eventParameter;

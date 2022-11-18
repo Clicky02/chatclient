@@ -4,6 +4,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/*
+ * A structure that holds the information for one packet.
+ * 
+ * Can be used for packets coming from or going to the server. The packet is 
+ * structured like so that the first line is the command, and each subsequent 
+ * line is a parameter of the command. Lines are ended by the CRLF constant, 
+ * and the packet is ended by the END constant (a null terminator).
+ */
 public class ProtocolPacket {
     final static String CRLF = "/r/n";
     final static String END = "\0";
@@ -26,6 +34,9 @@ public class ProtocolPacket {
         return parameters;
     }
 
+    /*
+     * Creates the raw String that this packet represents.
+     */
     protected String getContent() {
         StringBuilder packetBuilder = new StringBuilder(this.command + CRLF);
 
@@ -38,11 +49,13 @@ public class ProtocolPacket {
         return packetBuilder.toString();
     }
 
+    /*
+     * Send this packet through the outputStream.
+     */
     public void send(DataOutputStream outputStream) {
         try {
             outputStream.writeBytes(getContent());
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

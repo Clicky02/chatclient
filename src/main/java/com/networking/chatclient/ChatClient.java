@@ -14,9 +14,11 @@ import com.networking.chatclient.ClientProtocol.MessageAction;
 import com.networking.chatclient.ServerProtocol.ServerCommand;
 
 /*
- * Hello world!
+ * The main class for the chat client.
+ * 
+ * Handles communication with the server, while a UserInterface class handles the user interface.
  */
-public class WebClient {
+public class ChatClient {
     /*
      * Structure for containing a message. All properties are immutable except
      * content.
@@ -71,6 +73,10 @@ public class WebClient {
         public Group(int id, String name) {
             this.id = id;
             this.name = name;
+        }
+
+        public String toString() {
+            return name;
         }
     }
 
@@ -155,16 +161,28 @@ public class WebClient {
      * The main line of execution.
      */
     public static void main(String[] args) {
-        WebClient client = new WebClient();
-        client.start();
+        boolean shouldUseGUI = false;
+        if (args.length > 0 && args[0].equalsIgnoreCase("-g")) {
+            shouldUseGUI = true;
+        }
+
+        ChatClient client = new ChatClient();
+        client.start(shouldUseGUI);
     }
 
     /*
      * Starts the client.
      */
-    public void start() {
-        UserInterface interf = new CommandLineInterface(this);
-        interfaceThread = new Thread(interf);
+    public void start(boolean shouldUseGUI) {
+
+        UserInterface ui;
+        if (shouldUseGUI) {
+            ui = new GraphicalInterface(this);
+        } else {
+            ui = new CommandLineInterface(this);
+        }
+
+        interfaceThread = new Thread(ui);
         interfaceThread.start();
     }
 
@@ -377,6 +395,12 @@ public class WebClient {
 
     }
 
+    /*
+     * Functions for sending packets to the server.
+     * 
+     * These functions are primarily called by the user interface.
+     */
+
     public synchronized boolean join(String username) {
         if (!joined) {
             this.username = username;
@@ -456,7 +480,7 @@ public class WebClient {
         if (!isValidGroupId(groupId, true, false))
             return false;
 
-        userGroups.remove(groupId);
+        userGroups.remove(userGroups.indexOf(groupId));
         ClientProtocol.createGroupPacket(GroupAction.LEAVE, groupId).send(outputStream);
 
         return true;
@@ -545,6 +569,10 @@ public class WebClient {
         if (socket != null && !socket.isClosed())
             socket.close();
     }
+
+    /*
+     * Utility functions
+     */
 
     final public Message getSavedMessage(int groupId, int messageId) {
         if (!groups.containsKey(groupId))
