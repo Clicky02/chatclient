@@ -58,7 +58,7 @@
               <manifest>
                 <addClasspath>true</addClasspath>
                 <classpathPrefix>lib/</classpathPrefix>
-                <mainClass>com.networking.chatclient.WebClient</mainClass>
+                <mainClass>com.networking.chatclient.ChatClient</mainClass>
               </manifest>
             </archive>
 
