@@ -1,5 +1,8 @@
 package com.networking.chatclient;
 
+/*
+ * A namespace for types and functions for decoding server messages
+ */
 public final class ServerProtocol {
 
     public enum ServerCommand {
