@@ -259,15 +259,33 @@ public class ChatClient {
                 String[] names = packet.parameters.get(0).split(",");
                 String[] ids = packet.parameters.get(1).split(",");
 
-                System.out.print(packet.getCommand());
-                System.out.print(packet.getContent());
+                System.out.println("Packet Contents");
+                System.out.println(packet.getContent());
+                System.out.println("");
+
+                System.out.println("Number of names");
+                System.out.println(names.length);
+                System.out.println("");
+
+                System.out.println("Number of ids");
+                System.out.println(ids.length);
+                System.out.println("");
 
                 for (int i = 0; i < ids.length; i++) {
                     int id = Integer.parseInt(ids[i]);
                     if (!groups.containsKey(id)) {
+                        System.out.println("Adding Group Id " + id);
                         groups.put(id, new Group(Integer.parseInt(ids[i]), names[i]));
                     }
                 }
+
+                System.out.println("");
+
+                System.out.println("Global Groups");
+                for (Group g : groups.values()) {
+                    System.out.print(g + ", ");
+                }
+                System.out.println("\n");
 
                 receiveGroupListEvent.invoke(new ReceiveGroupListEventPayload());
                 return;

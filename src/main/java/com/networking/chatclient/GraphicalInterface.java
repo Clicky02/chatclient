@@ -258,8 +258,20 @@ class ChatFrame extends JFrame {
         groupPane = new JSplitPane();
         groupPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
+        System.out.println("Global Groups Before retrieve");
+        for (Group g : client.groups.values()) {
+            System.out.print(g + ", ");
+        }
+        System.out.println("\n");
+
         // Retrieve Groups
         client.retrieveGroups();
+
+        System.out.println("Global Groups after retrieve");
+        for (Group g : client.groups.values()) {
+            System.out.print(g + ", ");
+        }
+        System.out.println("\n");
 
         // Create all groups holder panel
         allGroupsPanel = new JPanel();
