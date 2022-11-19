@@ -442,9 +442,10 @@ public class CommandLineInterface extends UserInterface {
     }
 
     /*
-     * Given arguments from the command line run the appropriate command.
+     * Gets the groupId given a user inputed string for the group. The inputted
+     * string can be the group id or the group name.
      * 
-     * args[0] is the command
+     * Will return -1 if the input was invalid.
      */
     private int getGroupIdFromArgument(String argument) {
         int groupId = -1;
@@ -458,8 +459,6 @@ public class CommandLineInterface extends UserInterface {
         } catch (NumberFormatException e) {
             String groupName = argument;
             for (Group g : client.getGroups()) {
-                System.out.println(g.name);
-                System.out.println(groupName);
                 if (g.name.equals(groupName)) {
                     groupId = g.id;
                 }
