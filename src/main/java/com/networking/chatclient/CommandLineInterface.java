@@ -383,10 +383,13 @@ public class CommandLineInterface extends UserInterface {
         client.receiveMessageLabelEvent.onEvent((payload) -> {
             synchronized (this) {
                 Message m = payload.labelMessage;
+                Group g = client.getGroup(m.groupId);
+
                 System.out.print("\b\b\n");
                 System.out.println("------------------------------------------------------------------------");
-                System.out
-                        .println("Id: " + m.messageId + "\tGroup: " + m.subject + " " + m.username + " " + m.postDate);
+                System.out.println("Id: " + m.messageId + "\tGroup: " + g.name);
+                System.out.println("User: " + m.username + "\tDate: " + m.postDate);
+                System.out.println("Subject: " + m.subject);
                 System.out.println("------------------------------------------------------------------------");
                 System.out.print("> ");
             }
