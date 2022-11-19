@@ -64,6 +64,9 @@ public class CommandLineInterface extends UserInterface {
             this.mustBeJoined = mustBeJoined;
         }
 
+        /*
+         * Runs the command
+         */
         public boolean run(ChatClient client, ArrayList<String> args) {
             if (mustBeJoined && !client.isJoined()) {
                 System.out.println("You must have connected to and joined a sever to perform this command.");
@@ -81,6 +84,13 @@ public class CommandLineInterface extends UserInterface {
             return commandFunction.apply(args);
         }
 
+        /*
+         * Returns a string in the format:
+         * 
+         * command_name <argument> <argument> ...
+         * 
+         * detailing how a command is used
+         */
         public String getCommandUsage() {
             StringBuilder usage = new StringBuilder(name);
 
@@ -377,6 +387,9 @@ public class CommandLineInterface extends UserInterface {
         reader = new BufferedReader(new InputStreamReader(System.in));
     }
 
+    /*
+     * The main line of execution for the UI.
+     */
     @Override
     public void run() {
 
@@ -411,6 +424,11 @@ public class CommandLineInterface extends UserInterface {
         }
     }
 
+    /*
+     * Given arguments from the command line run the appropriate command.
+     * 
+     * args[0] is the command
+     */
     private synchronized void runCommand(ArrayList<String> args) {
         String commandName = args.get(0);
         for (Command command : commands) {
@@ -423,6 +441,11 @@ public class CommandLineInterface extends UserInterface {
         System.out.println("No command with name " + commandName + ".");
     }
 
+    /*
+     * Given arguments from the command line run the appropriate command.
+     * 
+     * args[0] is the command
+     */
     private int getGroupIdFromArgument(String argument) {
         int groupId = -1;
         try {
@@ -446,6 +469,12 @@ public class CommandLineInterface extends UserInterface {
         return groupId;
     }
 
+    /*
+     * Given the groupID and a user inputed string for the message id, return the
+     * actual message id.
+     * 
+     * Will return -1 if the input was invalid.
+     */
     private int getMessageIdFromArgument(int groupId, String argument) {
         int messageId = -1;
         try {
@@ -457,6 +486,9 @@ public class CommandLineInterface extends UserInterface {
         return messageId;
     }
 
+    /*
+     * Gets the next line of input
+     */
     private String getString(String prompt) {
         String result = null;
         while (result == null) {
