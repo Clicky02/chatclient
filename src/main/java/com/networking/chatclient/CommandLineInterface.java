@@ -65,7 +65,7 @@ public class CommandLineInterface extends UserInterface {
         }
 
         public boolean run(ChatClient client, ArrayList<String> args) {
-            if (mustBeJoined && !client.joined) {
+            if (mustBeJoined && !client.isJoined()) {
                 System.out.println("You must have connected to and joined a sever to perform this command.");
                 System.out.println("Run the command \"connect <host> <port>\" to connect to a server.");
                 System.out.println("Run the command \"join <username>\" to join a server.");
@@ -241,7 +241,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                if (client.userGroups.contains(groupId)) {
+                if (client.userIsInGroup(groupId)) {
                     System.out.println("Already in group.");
                     return false;
                 }
@@ -265,7 +265,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                if (!client.userGroups.contains(groupId)) {
+                if (!client.userIsInGroup(groupId)) {
                     System.out.println("Not in group.");
                     return false;
                 }
@@ -320,7 +320,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                if (!client.userGroups.contains(groupId)) {
+                if (!client.userIsInGroup(groupId)) {
                     System.out.println("Not in group.");
                     return false;
                 }
@@ -344,7 +344,7 @@ public class CommandLineInterface extends UserInterface {
                     return false;
                 }
 
-                if (!client.userGroups.contains(groupId)) {
+                if (!client.userIsInGroup(groupId)) {
                     System.out.println("Not in group.");
                     return false;
                 }
@@ -431,7 +431,7 @@ public class CommandLineInterface extends UserInterface {
             }
         } catch (NumberFormatException e) {
             String groupName = argument;
-            for (Group g : client.groups.values()) {
+            for (Group g : client.getGroups()) {
                 System.out.println(g.name);
                 System.out.println(groupName);
                 if (g.name.equals(groupName)) {

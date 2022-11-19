@@ -42,12 +42,12 @@ public class ChatClient {
             this.subject = subject;
         }
 
-        public void setContent(String content) {
+        public synchronized void setContent(String content) {
             this.content = content;
             this.loaded = true;
         }
 
-        public String getContent() {
+        public synchronized String getContent() {
             return content;
         }
 
@@ -150,12 +150,12 @@ public class ChatClient {
     Thread responseHandlerThread; // The thread that will listen to the server
     Thread interfaceThread; // The thread that will run the interface and send messages to the server
 
-    boolean joined; // Whether the user has joined the server
-    String username; // The user's username
-    ArrayList<Integer> userGroups = new ArrayList<Integer>(); // A list of the ids that the user is in
-
-    HashMap<Integer, Group> groups = new HashMap<Integer, Group>(); // A hashmap of all the information known about each
-                                                                    // group.
+    private boolean joined; // Whether the user has joined the server
+    private String username; // The user's username
+    private ArrayList<Integer> userGroups = new ArrayList<Integer>(); // A list of the ids that the user is in
+    private HashMap<Integer, Group> groups = new HashMap<Integer, Group>(); // A hashmap of all the information known
+                                                                            // about each
+    // group.
 
     /*
      * The main line of execution.
@@ -420,19 +420,25 @@ public class ChatClient {
      * These functions are primarily called by the user interface.
      */
 
-    public synchronized boolean join(String username) {
+    public boolean join(String username) {
         if (!joined) {
-            this.username = username;
-            ClientProtocol.createJoinPacket(username).send(outputStream);
+
+            synchronized (this) {
+                this.username = username;
+                ClientProtocol.createJoinPacket(username).send(outputStream);
+            }
 
             UsernameVerifyEventPayload payload = usernameVerifyEvent.waitForEvent();
 
-            if (payload.isValid) { // Join default group on join
-                groups.put(0, new Group(0, "Global"));
-                userGroups.add(0);
-            }
+            synchronized (this) {
 
-            return payload.isValid;
+                if (payload.isValid) { // Join default group on join
+                    groups.put(0, new Group(0, "Global"));
+                    userGroups.add(0);
+                }
+
+                return payload.isValid;
+            }
         }
 
         return false;
@@ -450,7 +456,7 @@ public class ChatClient {
         return true;
     }
 
-    public synchronized Message retrieveMessage(int groupId, int messageId) {
+    public Message retrieveMessage(int groupId, int messageId) {
         if (joined && requestMessage(groupId, messageId)) {
 
             ReceiveMessageContentEventPayload messagePayload = null;
@@ -505,7 +511,7 @@ public class ChatClient {
         return true;
     }
 
-    public synchronized void logOut() {
+    public void logOut() {
         if (joined) {
             ClientProtocol.createLeavePacket().send(outputStream);
 
@@ -514,15 +520,17 @@ public class ChatClient {
                 payload = userLeaveEvent.waitForEvent();
             }
 
-            // Reset server info
-            joined = false;
-            username = null;
-            userGroups.clear();
-            groups.clear();
+            synchronized (this) {
+                // Reset server info
+                joined = false;
+                username = null;
+                userGroups.clear();
+                groups.clear();
+            }
         }
     }
 
-    public synchronized Group retrieveGroupUsers(int groupId) {
+    public Group retrieveGroupUsers(int groupId) {
 
         if (joined && requestGroupUsers(groupId)) {
 
@@ -551,11 +559,13 @@ public class ChatClient {
         return true;
     }
 
-    public synchronized ArrayList<Group> retrieveGroups() {
+    public ArrayList<Group> retrieveGroups() {
         if (joined) {
             requestGroups();
             receiveGroupListEvent.waitForEvent();
-            return new ArrayList<Group>(groups.values());
+            synchronized (this) {
+                return new ArrayList<Group>(groups.values());
+            }
         }
 
         return null;
@@ -605,7 +615,7 @@ public class ChatClient {
         return g.messages.get(messageId);
     }
 
-    public synchronized boolean isValidGroupId(int groupId, boolean mustBeInGroup, boolean mustNotBeInGroup) {
+    public boolean isValidGroupId(int groupId, boolean mustBeInGroup, boolean mustNotBeInGroup) {
 
         if (!groups.containsKey(groupId)) {
             retrieveGroups();
@@ -621,6 +631,34 @@ public class ChatClient {
             return false;
 
         return true;
+    }
+
+    public synchronized Integer[] getUserGroups() {
+        return userGroups.toArray(new Integer[userGroups.size()]);
+    }
+
+    public synchronized Group[] getGroups() {
+        return groups.values().toArray(new Group[groups.size()]);
+    }
+
+    public synchronized Group getGroup(int id) {
+        return groups.get(id);
+    }
+
+    public synchronized boolean userIsInGroup(Group g) {
+        return userIsInGroup(g.id);
+    }
+
+    public synchronized boolean userIsInGroup(int groupId) {
+        return userGroups.contains(groupId);
+    }
+
+    public synchronized boolean isJoined() {
+        return joined;
+    }
+
+    public synchronized String getUsername() {
+        return username;
     }
 
 }

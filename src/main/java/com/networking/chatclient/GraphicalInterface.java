@@ -1,6 +1,7 @@
 package com.networking.chatclient;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -206,7 +207,7 @@ class ChatFrame extends JFrame {
         });
 
         // Set initial state
-        setSelectedGroup(client.groups.get(0));
+        setSelectedGroup(client.getGroups()[0]);
         setState(ChatFrameState.SHOWING_MESSAGE_LIST);
 
         // Make window visible
@@ -259,7 +260,7 @@ class ChatFrame extends JFrame {
         groupPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 
         System.out.println("Global Groups Before retrieve");
-        for (Group g : client.groups.values()) {
+        for (Group g : client.getGroups()) {
             System.out.print(g + ", ");
         }
         System.out.println("\n");
@@ -268,7 +269,7 @@ class ChatFrame extends JFrame {
         client.retrieveGroups();
 
         System.out.println("Global Groups after retrieve");
-        for (Group g : client.groups.values()) {
+        for (Group g : client.getGroups()) {
             System.out.print(g + ", ");
         }
         System.out.println("\n");
@@ -283,14 +284,14 @@ class ChatFrame extends JFrame {
 
         // Create the model for the all groups list
         allListModel = new DefaultListModel<Group>();
-        allListModel.addAll(client.groups.values()); // add all possible groups
+        allListModel.addAll(Arrays.asList(client.getGroups())); // add all possible groups
 
         // Create the all groups list
         allGroupsList = new JList<Group>(allListModel);
         allGroupsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         allGroupsList.addListSelectionListener((evt) -> {
             Group g = allGroupsList.getSelectedValue();
-            groupJoinButton.setEnabled(g != null && !client.userGroups.contains(g.id));
+            groupJoinButton.setEnabled(g != null && !client.userIsInGroup(g.id));
         });
         allGroupsPanel.add(allGroupsList, BorderLayout.CENTER);
 
@@ -301,7 +302,7 @@ class ChatFrame extends JFrame {
         groupJoinButton.addActionListener((evt) -> {
             Group g = allGroupsList.getSelectedValue();
 
-            if (g != null && !client.userGroups.contains(g.id)) {
+            if (g != null && !client.userIsInGroup(g.id)) {
                 if (client.joinGroup(g.id)) {
                     userListModel.addElement(g);
                     groupJoinButton.setEnabled(false);
@@ -320,8 +321,8 @@ class ChatFrame extends JFrame {
 
         // Create the model for the user groups list
         userListModel = new DefaultListModel<Group>();
-        for (int id : client.userGroups) { // Add every group the client is already a part of
-            userListModel.addElement(client.groups.get(id));
+        for (int id : client.getUserGroups()) { // Add every group the client is already a part of
+            userListModel.addElement(client.getGroup(id));
         }
 
         // Create the user groups list
@@ -414,7 +415,7 @@ class ChatFrame extends JFrame {
 
                 ReceiveMessageLabelEventPayload payload = null;
 
-                while (payload == null || !payload.labelMessage.username.equals(client.username)
+                while (payload == null || !payload.labelMessage.username.equals(client.getUsername())
                         || !payload.labelMessage.subject.equals(subject)
                         || payload.labelMessage.groupId != id) {
                     payload = client.receiveMessageLabelEvent.waitForEvent();
@@ -672,7 +673,7 @@ class ChatFrame extends JFrame {
         m = client.retrieveMessage(m.groupId, m.messageId);
 
         if (m != null) {
-            Group g = client.groups.get(m.groupId);
+            Group g = client.getGroup(m.groupId);
 
             messageReadFeeback.setText("Message Successfully Loaded");
 

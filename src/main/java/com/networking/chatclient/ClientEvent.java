@@ -18,40 +18,32 @@ public class ClientEvent<T> {
     int currentFunctionId = 0;
     HashMap<Integer, Consumer<T>> eventFunctions = new HashMap<Integer, Consumer<T>>();
 
-    public ClientEvent() {
-        this.lockingObject = this;
-    }
-
     public ClientEvent(Object lockingObject) {
         this.lockingObject = lockingObject;
     }
 
-    public T waitForEvent() {
-        synchronized (lockingObject) {
-            try {
-                lockingObject.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return null;
-            }
-            return eventParameter;
+    public synchronized T waitForEvent() {
+        try {
+            this.wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return null;
         }
+        return eventParameter;
     }
 
-    public int onEvent(Consumer<T> eventFunction) {
-        synchronized (lockingObject) {
-            eventFunctions.put(currentFunctionId, eventFunction);
-            return currentFunctionId++;
-        }
+    public synchronized int onEvent(Consumer<T> eventFunction) {
+        eventFunctions.put(currentFunctionId, eventFunction);
+        return currentFunctionId++;
+
     }
 
-    public void invoke(T eventParameter) {
-        synchronized (lockingObject) {
-            this.eventParameter = eventParameter;
-            lockingObject.notifyAll();
-            for (Consumer<T> eventFunction : eventFunctions.values()) {
-                eventFunction.accept(eventParameter);
-            }
+    public synchronized void invoke(T eventParameter) {
+        this.eventParameter = eventParameter;
+        this.notifyAll();
+        for (Consumer<T> eventFunction : eventFunctions.values()) {
+            eventFunction.accept(eventParameter);
         }
+
     }
 }
