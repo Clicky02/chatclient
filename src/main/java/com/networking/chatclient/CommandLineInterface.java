@@ -386,11 +386,11 @@ public class CommandLineInterface extends UserInterface {
                 Group g = client.getGroup(m.groupId);
 
                 System.out.print("\b\b\n");
-                System.out.println("------------------------------------------------------------------------");
+                System.out.println("------------------------------New Message------------------------------");
                 System.out.println("Id: " + m.messageId + "\tGroup: " + g.name);
                 System.out.println("User: " + m.username + "\tDate: " + m.postDate);
                 System.out.println("Subject: " + m.subject);
-                System.out.println("------------------------------------------------------------------------");
+                System.out.println("-----------------------------------------------------------------------");
                 System.out.print("> ");
             }
         });
