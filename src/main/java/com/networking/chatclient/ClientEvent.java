@@ -14,13 +14,8 @@ public class ClientEvent<T> {
 
     T eventParameter;
 
-    Object lockingObject;
     int currentFunctionId = 0;
     HashMap<Integer, Consumer<T>> eventFunctions = new HashMap<Integer, Consumer<T>>();
-
-    public ClientEvent(Object lockingObject) {
-        this.lockingObject = lockingObject;
-    }
 
     public synchronized T waitForEvent() {
         try {

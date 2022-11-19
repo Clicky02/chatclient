@@ -95,40 +95,38 @@ public class ChatClient {
         boolean isValid;
     }
 
-    ClientEvent<UsernameVerifyEventPayload> usernameVerifyEvent = new ClientEvent<UsernameVerifyEventPayload>(this);
+    ClientEvent<UsernameVerifyEventPayload> usernameVerifyEvent = new ClientEvent<UsernameVerifyEventPayload>();
 
     public class UserJoinEventPayload {
         Group group;
         String username;
     }
 
-    ClientEvent<UserJoinEventPayload> userJoinEvent = new ClientEvent<UserJoinEventPayload>(this);
+    ClientEvent<UserJoinEventPayload> userJoinEvent = new ClientEvent<UserJoinEventPayload>();
 
     public class UserLeaveEventPayload {
         Group group;
         String username;
     }
 
-    ClientEvent<UserLeaveEventPayload> userLeaveEvent = new ClientEvent<UserLeaveEventPayload>(this);
+    ClientEvent<UserLeaveEventPayload> userLeaveEvent = new ClientEvent<UserLeaveEventPayload>();
 
     public class ReceiveMessageLabelEventPayload {
         Message labelMessage;
     }
 
-    ClientEvent<ReceiveMessageLabelEventPayload> receiveMessageLabelEvent = new ClientEvent<ReceiveMessageLabelEventPayload>(
-            this);
+    ClientEvent<ReceiveMessageLabelEventPayload> receiveMessageLabelEvent = new ClientEvent<ReceiveMessageLabelEventPayload>();
 
     public class ReceiveUserListEventPayload {
         Group group;
     }
 
-    ClientEvent<ReceiveUserListEventPayload> receiveUserListEvent = new ClientEvent<ReceiveUserListEventPayload>(this);
+    ClientEvent<ReceiveUserListEventPayload> receiveUserListEvent = new ClientEvent<ReceiveUserListEventPayload>();
 
     public class ReceiveGroupListEventPayload {
     }
 
-    ClientEvent<ReceiveGroupListEventPayload> receiveGroupListEvent = new ClientEvent<ReceiveGroupListEventPayload>(
-            this);
+    ClientEvent<ReceiveGroupListEventPayload> receiveGroupListEvent = new ClientEvent<ReceiveGroupListEventPayload>();
 
     public class ReceiveMessageContentEventPayload {
         int groupId;
@@ -137,8 +135,7 @@ public class ChatClient {
         boolean validId;
     }
 
-    ClientEvent<ReceiveMessageContentEventPayload> receiveMessageContentEvent = new ClientEvent<ReceiveMessageContentEventPayload>(
-            this);
+    ClientEvent<ReceiveMessageContentEventPayload> receiveMessageContentEvent = new ClientEvent<ReceiveMessageContentEventPayload>();
 
     /*
      * State variables
