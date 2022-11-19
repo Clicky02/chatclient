@@ -390,6 +390,11 @@ class ChatFrame extends JFrame {
                 usersListModel.addElement(payload.username);
             }
         });
+        client.userLeaveEvent.onEvent((payload) -> {
+            if (payload.group != null && payload.group.id == selectedGroup.id) {
+                usersListModel.removeElement(payload.username);
+            }
+        });
 
         // Create Panes and add panels
         topGroupPane = new JSplitPane();
@@ -743,7 +748,9 @@ class ChatFrame extends JFrame {
         messageList.setSelectedGroup(newGroup);
 
         usersListModel.removeAllElements();
-        usersListModel.addAll(newGroup.users);
+        if (newGroup != null) {
+            usersListModel.addAll(newGroup.users);
+        }
     }
 }
 
