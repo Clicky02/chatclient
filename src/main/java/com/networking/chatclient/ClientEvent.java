@@ -14,17 +14,31 @@ public class ClientEvent<T> {
 
     T eventParameter;
 
+    // Uses these to ensure that a second event doen't get called before everything
+    // waiting for the first event had a chance to respond
+    int waitingForEvent = 0;
+    int waitingAfterEvent = 0;
+
     int currentFunctionId = 0;
     HashMap<Integer, Consumer<T>> eventFunctions = new HashMap<Integer, Consumer<T>>();
 
     public synchronized T waitForEvent() {
         try {
+            waitingForEvent++;
             this.wait();
         } catch (InterruptedException e) {
             e.printStackTrace();
             return null;
         }
-        return eventParameter;
+
+        T returnedParameter = eventParameter;
+
+        waitingAfterEvent--;
+        if (waitingAfterEvent == 0) {
+            this.notify();
+        }
+
+        return returnedParameter;
     }
 
     public synchronized int onEvent(Consumer<T> eventFunction) {
@@ -34,6 +48,15 @@ public class ClientEvent<T> {
     }
 
     public synchronized void invoke(T eventParameter) {
+        if (waitingAfterEvent > 0) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        waitingAfterEvent = waitingForEvent;
+        waitingForEvent = 0;
         this.eventParameter = eventParameter;
         this.notifyAll();
         for (Consumer<T> eventFunction : eventFunctions.values()) {
