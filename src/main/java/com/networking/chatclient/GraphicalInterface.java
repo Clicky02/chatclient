@@ -156,15 +156,27 @@ class ChatFrame extends JFrame {
 
     MessageListPanel messageList;
 
+    /*
+     * Bottom Control Panel Components
+     */
+
     JPanel controlPanel;
     JButton readMessageButton;
     JButton createMessageButton;
     JButton returnButton;
 
+    /*
+     * Message Creation Components
+     */
+
     JPanel messageCreationPanel;
     JTextField subjectField;
     JTextArea contentField;
     JLabel messageCreationFeeback;
+
+    /*
+     * Message Read Components
+     */
 
     JPanel messageReadPanel;
     JTextField groupDisplayField;
@@ -176,12 +188,34 @@ class ChatFrame extends JFrame {
 
     JButton sendMessageButton;
 
+    /*
+     * Group Sidebar Components
+     */
+
+    JSplitPane topGroupPane;
+    JSplitPane bottomGroupPane;
+
+    JPanel allGroupsPanel;
+    JList<Group> allGroupsList;
+    DefaultListModel<Group> allGroupsListModel;
+    JButton groupJoinButton;
+
+    JPanel userGroupsPanel;
+    JList<Group> userGroupsList;
+    DefaultListModel<Group> userGroupsListModel;
+    JButton groupLeaveButton;
+
+    JPanel usersPanel;
+    JList<String> usersList;
+    DefaultListModel<String> usersListModel;
+
     public ChatFrame(ChatClient client) {
 
         // Create the window/frame
         super("Chat Frame");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 500);
+        setSize(800, 600);
+        setMinimumSize(new Dimension(500, 500));
 
         this.client = client;
 
@@ -191,8 +225,8 @@ class ChatFrame extends JFrame {
 
         // Create group panel
         createGroupPanel();
-        groupPane.setPreferredSize(new Dimension(200, 200));
-        getContentPane().add(groupPane, BorderLayout.EAST);
+        topGroupPane.setPreferredSize(new Dimension(200, 200));
+        getContentPane().add(topGroupPane, BorderLayout.EAST);
 
         // Create the message creation panel
         createMessageCreationPanel();
@@ -242,58 +276,31 @@ class ChatFrame extends JFrame {
         controlPanel.add(returnButton);
     }
 
-    JSplitPane groupPane;
-
-    JPanel allGroupsPanel;
-    JList<Group> allGroupsList;
-    DefaultListModel<Group> allListModel;
-    JButton groupJoinButton;
-
-    JPanel userGroupsPanel;
-    JList<Group> userGroupsList;
-    DefaultListModel<Group> userListModel;
-    JButton groupLeaveButton;
-
     public void createGroupPanel() {
-        // Create Pane
-        groupPane = new JSplitPane();
-        groupPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-
-        System.out.println("Global Groups Before retrieve");
-        for (Group g : client.getGroups()) {
-            System.out.print(g + ", ");
-        }
-        System.out.println("\n");
 
         // Retrieve Groups
         client.retrieveGroups();
-
-        System.out.println("Global Groups after retrieve");
-        for (Group g : client.getGroups()) {
-            System.out.print(g + ", ");
-        }
-        System.out.println("\n");
 
         // Create all groups holder panel
         allGroupsPanel = new JPanel();
         allGroupsPanel.setBackground(new Color(255, 255, 255));
         allGroupsPanel.setLayout(new BorderLayout());
-
         allGroupsPanel.setBorder(BorderFactory.createTitledBorder("All Groups"));
-        groupPane.setTopComponent(allGroupsPanel);
 
         // Create the model for the all groups list
-        allListModel = new DefaultListModel<Group>();
-        allListModel.addAll(Arrays.asList(client.getGroups())); // add all possible groups
+        allGroupsListModel = new DefaultListModel<Group>();
+        allGroupsListModel.addAll(Arrays.asList(client.getGroups())); // add all possible groups
 
         // Create the all groups list
-        allGroupsList = new JList<Group>(allListModel);
+        allGroupsList = new JList<Group>(allGroupsListModel);
         allGroupsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         allGroupsList.addListSelectionListener((evt) -> {
             Group g = allGroupsList.getSelectedValue();
             groupJoinButton.setEnabled(g != null && !client.userIsInGroup(g.id));
         });
-        allGroupsPanel.add(allGroupsList, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(allGroupsList);
+        scroll.setMinimumSize(new Dimension(100, 100));
+        allGroupsPanel.add(scroll, BorderLayout.CENTER);
 
         // Create the join group button
         groupJoinButton = new JButton("Join");
@@ -304,7 +311,7 @@ class ChatFrame extends JFrame {
 
             if (g != null && !client.userIsInGroup(g.id)) {
                 if (client.joinGroup(g.id)) {
-                    userListModel.addElement(g);
+                    userGroupsListModel.addElement(g);
                     groupJoinButton.setEnabled(false);
                 }
             }
@@ -315,18 +322,16 @@ class ChatFrame extends JFrame {
         userGroupsPanel = new JPanel();
         userGroupsPanel.setBackground(new Color(255, 255, 255));
         userGroupsPanel.setLayout(new BorderLayout());
-
         userGroupsPanel.setBorder(BorderFactory.createTitledBorder("User Groups"));
-        groupPane.setBottomComponent(userGroupsPanel);
 
         // Create the model for the user groups list
-        userListModel = new DefaultListModel<Group>();
+        userGroupsListModel = new DefaultListModel<Group>();
         for (int id : client.getUserGroups()) { // Add every group the client is already a part of
-            userListModel.addElement(client.getGroup(id));
+            userGroupsListModel.addElement(client.getGroup(id));
         }
 
         // Create the user groups list
-        userGroupsList = new JList<Group>(userListModel);
+        userGroupsList = new JList<Group>(userGroupsListModel);
         userGroupsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         userGroupsList.addListSelectionListener((evt) -> {
             Group g = userGroupsList.getSelectedValue();
@@ -338,7 +343,9 @@ class ChatFrame extends JFrame {
             }
 
         });
-        userGroupsPanel.add(userGroupsList, BorderLayout.CENTER);
+        scroll = new JScrollPane(userGroupsList);
+        scroll.setMinimumSize(new Dimension(100, 100));
+        userGroupsPanel.add(scroll, BorderLayout.CENTER);
 
         // Create the leave group button
         groupLeaveButton = new JButton("Leave");
@@ -349,11 +356,51 @@ class ChatFrame extends JFrame {
 
             if (g != null && g.id != 0) { // Do not let them leave the global group
                 if (client.leaveGroup(g.id)) {
-                    userListModel.removeElement(g);
+                    userGroupsListModel.removeElement(g);
                 }
             }
         });
         userGroupsPanel.add(groupLeaveButton, BorderLayout.SOUTH);
+
+        // Create users panel
+        usersPanel = new JPanel();
+        usersPanel.setBackground(new Color(255, 255, 255));
+        usersPanel.setLayout(new BorderLayout());
+        usersPanel.setBorder(BorderFactory.createTitledBorder("Users"));
+
+        // Create the model for the users list
+        usersListModel = new DefaultListModel<String>();
+        usersListModel.addAll(client.getGroup(0).users);
+
+        // Create the all groups list
+        usersList = new JList<String>(usersListModel);
+        usersList.setSelectionModel(new DefaultListSelectionModel() { // Do not allow selections
+            @Override
+            public void setSelectionInterval(int index0, int index1) {
+                super.setSelectionInterval(-1, -1);
+            }
+        });
+        scroll = new JScrollPane(usersList);
+        scroll.setMinimumSize(new Dimension(100, 100));
+        usersPanel.add(scroll, BorderLayout.CENTER);
+
+        // Listen for player join and add to them to the list
+        client.userJoinEvent.onEvent((payload) -> {
+            if (payload.group != null && payload.group.id == selectedGroup.id) {
+                usersListModel.addElement(payload.username);
+            }
+        });
+
+        // Create Panes and add panels
+        topGroupPane = new JSplitPane();
+        topGroupPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        bottomGroupPane = new JSplitPane();
+        bottomGroupPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+
+        topGroupPane.setTopComponent(allGroupsPanel);
+        topGroupPane.setBottomComponent(bottomGroupPane);
+        bottomGroupPane.setTopComponent(userGroupsPanel);
+        bottomGroupPane.setBottomComponent(usersPanel);
 
     }
 
@@ -694,6 +741,9 @@ class ChatFrame extends JFrame {
     private void setSelectedGroup(Group newGroup) {
         selectedGroup = newGroup;
         messageList.setSelectedGroup(newGroup);
+
+        usersListModel.removeAllElements();
+        usersListModel.addAll(newGroup.users);
     }
 }
 
